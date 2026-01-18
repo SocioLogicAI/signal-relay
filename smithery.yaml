@@ -1,0 +1,128 @@
+# Smithery Registry Configuration
+# https://smithery.ai/docs/publishing
+
+name: sociologic-signal-relay
+title: "Signal Relay - Revenue Intelligence for AI Agents"
+description: |
+  Connect any MCP-compatible AI agent to SocioLogic's synthetic persona platform.
+  Interview realistic customer personas, run multi-persona research campaigns,
+  and export board-ready reports—all through natural conversation.
+
+  Features:
+  - 15 MCP tools for personas, campaigns, focus groups, and credits
+  - High-fidelity synthetic personas with consistent behavior
+  - Semantic memory retrieval (RAG) for persona continuity
+  - Edge-deployed on Cloudflare Workers (300+ locations, <50ms latency)
+
+  Use cases:
+  - Product teams validating features with synthetic buyers
+  - Sales teams practicing objection handling
+  - Marketing teams testing messaging resonance
+  - AI agents conducting autonomous market research
+
+author: SocioLogic
+authorUrl: https://sociologic.ai
+repository: https://github.com/SocioLogicAI/signal-relay
+homepage: https://sociologic.ai/signal-relay
+documentation: https://sociologic.ai/docs
+
+license: MIT
+version: 1.0.0
+
+# Server configuration
+server:
+  transport: http
+  url: https://mcp.sociologicai.com
+
+# Authentication
+auth:
+  type: header
+  header: X-API-Key
+  description: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)"
+
+# Categories for discovery
+categories:
+  - market-research
+  - personas
+  - customer-intelligence
+  - sales
+  - product-management
+
+# Tags for search
+tags:
+  - personas
+  - synthetic-users
+  - market-research
+  - customer-research
+  - revenue-intelligence
+  - interviews
+  - campaigns
+  - focus-groups
+
+# Tool summary (full definitions in the server)
+tools:
+  - name: sociologic_list_personas
+    description: List synthetic personas from marketplace or private collection
+
+  - name: sociologic_get_persona
+    description: Get detailed persona information (demographics, psychographics, traits)
+
+  - name: sociologic_create_persona
+    description: Generate a new persona from natural language description
+
+  - name: sociologic_interview_persona
+    description: Conduct adversarial interview with a persona
+
+  - name: sociologic_get_persona_memories
+    description: Retrieve persona's semantic memories via vector search
+
+  - name: sociologic_list_campaigns
+    description: List research campaigns with status and results
+
+  - name: sociologic_get_campaign
+    description: Get campaign details including interviews and findings
+
+  - name: sociologic_create_campaign
+    description: Create multi-persona research campaign with custom questions
+
+  - name: sociologic_execute_campaign
+    description: Execute draft campaign (async background processing)
+
+  - name: sociologic_export_campaign
+    description: Export campaign results as PDF or JSON
+
+  - name: sociologic_list_focus_groups
+    description: List focus groups for cohort-based research
+
+  - name: sociologic_get_focus_group
+    description: Get focus group details with member personas
+
+  - name: sociologic_create_focus_group
+    description: Create new focus group to organize personas
+
+  - name: sociologic_add_personas_to_focus_group
+    description: Add personas to an existing focus group
+
+  - name: sociologic_get_credits_balance
+    description: Check current credits balance and usage
+
+# Example prompts for users
+examples:
+  - prompt: "Interview the 'enterprise-buyer' persona about our pricing page friction"
+    description: Get realistic objections from a skeptical enterprise buyer
+
+  - prompt: "Create a persona for a mid-market SaaS CFO who is cost-conscious"
+    description: Generate a new synthetic persona from a description
+
+  - prompt: "Run a campaign asking 10 personas what would make them churn"
+    description: Systematic multi-persona research on churn triggers
+
+  - prompt: "Export the competitive audit campaign as a PDF"
+    description: Get board-ready reports from completed research
+
+# Pricing info
+pricing:
+  model: usage-based
+  free_tier: "100 credits on signup"
+  cost_per_interview: "$1"
+  details_url: https://sociologic.ai/pricing

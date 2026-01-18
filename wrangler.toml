@@ -1,0 +1,27 @@
+# Cloudflare Workers configuration for SocioLogic MCP Server
+# See: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "sociologic-mcp-server"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# API URL - points to the SocioLogic backend
+# For self-hosted deployments, change this to your own backend URL
+[vars]
+SOCIOLOGIC_API_URL = "https://www.sociologic.ai"
+
+# Optional: KV namespace for session storage (for future OAuth support)
+# Create via: npx wrangler kv namespace create SESSION_STORE
+# [[kv_namespaces]]
+# binding = "SESSION_STORE"
+# id = "your-kv-namespace-id"
+
+# Production environment
+[env.production]
+name = "sociologic-mcp-server"
+vars = { SOCIOLOGIC_API_URL = "https://www.sociologic.ai" }
+
+# Staging environment (uncomment to use)
+# [env.staging]
+# name = "sociologic-mcp-server-staging"
+# vars = { SOCIOLOGIC_API_URL = "https://staging.sociologic.ai" }

@@ -1,0 +1,31 @@
+{
+  "name": "@sociologic/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for SocioLogic Revenue Intelligence Platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241230.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.59.2"
+  },
+  "keywords": [
+    "mcp",
+    "sociologic",
+    "ai",
+    "personas",
+    "market-research"
+  ],
+  "license": "MIT"
+}

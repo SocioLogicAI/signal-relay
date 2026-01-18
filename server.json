@@ -1,0 +1,114 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schemas/server.json",
+  "name": "signal-relay-mcp",
+  "description": "Connect AI agents to SocioLogic's synthetic persona platform. Interview realistic customer personas, run multi-persona research campaigns, and export board-ready reports through natural conversation.",
+  "version": "1.0.0",
+  "author": {
+    "name": "SocioLogic",
+    "url": "https://sociologic.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SocioLogicAI/signal-relay"
+  },
+  "homepage": "https://sociologic.ai/signal-relay",
+  "license": "MIT",
+  "categories": [
+    "market-research",
+    "customer-intelligence",
+    "sales"
+  ],
+  "tags": [
+    "personas",
+    "synthetic-users",
+    "market-research",
+    "interviews",
+    "campaigns",
+    "focus-groups"
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "name": "signal-relay-mcp",
+      "version": "1.0.0",
+      "runtime": "node",
+      "transport": [
+        {
+          "type": "http",
+          "url": "https://mcp.sociologicai.com"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "transportType": "http",
+      "url": "https://mcp.sociologicai.com",
+      "headers": {
+        "X-API-Key": "${SOCIOLOGIC_API_KEY}"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "sociologic_list_personas",
+      "description": "List synthetic personas from marketplace or private collection"
+    },
+    {
+      "name": "sociologic_get_persona",
+      "description": "Get detailed persona information (demographics, psychographics, traits)"
+    },
+    {
+      "name": "sociologic_create_persona",
+      "description": "Generate a new persona from natural language description"
+    },
+    {
+      "name": "sociologic_interview_persona",
+      "description": "Conduct adversarial interview with a persona"
+    },
+    {
+      "name": "sociologic_get_persona_memories",
+      "description": "Retrieve persona's semantic memories via vector search"
+    },
+    {
+      "name": "sociologic_list_campaigns",
+      "description": "List research campaigns with status and results"
+    },
+    {
+      "name": "sociologic_get_campaign",
+      "description": "Get campaign details including interviews and findings"
+    },
+    {
+      "name": "sociologic_create_campaign",
+      "description": "Create multi-persona research campaign with custom questions"
+    },
+    {
+      "name": "sociologic_execute_campaign",
+      "description": "Execute draft campaign (async background processing)"
+    },
+    {
+      "name": "sociologic_export_campaign",
+      "description": "Export campaign results as PDF or JSON"
+    },
+    {
+      "name": "sociologic_list_focus_groups",
+      "description": "List focus groups for cohort-based research"
+    },
+    {
+      "name": "sociologic_get_focus_group",
+      "description": "Get focus group details with member personas"
+    },
+    {
+      "name": "sociologic_create_focus_group",
+      "description": "Create new focus group to organize personas"
+    },
+    {
+      "name": "sociologic_add_personas_to_focus_group",
+      "description": "Add personas to an existing focus group"
+    },
+    {
+      "name": "sociologic_get_credits_balance",
+      "description": "Check current credits balance and usage"
+    }
+  ]
+}

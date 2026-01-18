@@ -1,14 +1,36 @@
 {
-  "name": "@sociologic/mcp-server",
+  "name": "signal-relay-mcp",
   "version": "1.0.0",
-  "description": "MCP Server for SocioLogic Revenue Intelligence Platform",
+  "description": "MCP Server for SocioLogic Revenue Intelligence Platform - Interview synthetic personas, run research campaigns, and export insights",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SocioLogicAI/signal-relay.git"
+  },
+  "homepage": "https://sociologic.ai/signal-relay",
+  "bugs": {
+    "url": "https://github.com/SocioLogicAI/signal-relay/issues"
+  },
+  "author": {
+    "name": "SocioLogic",
+    "url": "https://sociologic.ai"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
@@ -22,10 +44,16 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "sociologic",
     "ai",
     "personas",
-    "market-research"
+    "synthetic-users",
+    "market-research",
+    "customer-intelligence",
+    "revenue-intelligence",
+    "interviews",
+    "focus-groups"
   ],
   "license": "MIT"
 }

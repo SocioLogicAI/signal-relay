@@ -1,7 +1,7 @@
 # Smithery Registry Configuration
 # https://smithery.ai/docs/publishing
 
-name: sociologic-signal-relay
+name: signal-relay-mcp
 title: "Signal Relay - Revenue Intelligence for AI Agents"
 description: |
   Connect any MCP-compatible AI agent to SocioLogic's synthetic persona platform.

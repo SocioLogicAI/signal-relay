@@ -354,6 +354,42 @@ export default {
       });
     }
 
+    // Server card for Smithery discovery (no auth required - must be before auth check)
+    // Format follows SEP-1649 spec: https://smithery.ai/docs/build/external#server-scanning
+    if (url.pathname === "/.well-known/mcp/server-card.json") {
+      const toolsWithSchema = TOOL_DEFINITIONS.map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: zodToJsonSchema(t.inputSchema, {
+          target: "jsonSchema7",
+          $refStrategy: "none",
+        }),
+      }));
+
+      return new Response(
+        JSON.stringify({
+          serverInfo: {
+            name: "signal-relay-mcp",
+            version: "1.0.1",
+          },
+          authentication: {
+            required: true,
+            schemes: ["apiKey"],
+            instructions: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
+          },
+          tools: toolsWithSchema,
+          resources: [],
+          prompts: [],
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
+    }
+
     // Early check of Content-Length header if present (optimization)
     const contentLength = request.headers.get("Content-Length");
     if (contentLength && parseInt(contentLength, 10) > MAX_REQUEST_SIZE) {

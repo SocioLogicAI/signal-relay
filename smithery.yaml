@@ -27,7 +27,7 @@ homepage: https://sociologic.ai/signal-relay
 documentation: https://sociologic.ai/docs
 
 license: MIT
-version: 1.0.0
+version: 1.0.1
 
 # Server configuration
 server:

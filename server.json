@@ -2,7 +2,7 @@
   "$schema": "https://registry.modelcontextprotocol.io/schemas/server.json",
   "name": "signal-relay-mcp",
   "description": "Connect AI agents to SocioLogic's synthetic persona platform. Interview realistic customer personas, run multi-persona research campaigns, and export board-ready reports through natural conversation.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "SocioLogic",
     "url": "https://sociologic.ai"
@@ -30,7 +30,7 @@
     {
       "registryType": "npm",
       "name": "signal-relay-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "runtime": "node",
       "transport": [
         {

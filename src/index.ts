@@ -370,7 +370,7 @@ export default {
         JSON.stringify({
           serverInfo: {
             name: "signal-relay-mcp",
-            version: "1.0.1",
+            version: "1.0.2",
           },
           authentication: {
             required: true,

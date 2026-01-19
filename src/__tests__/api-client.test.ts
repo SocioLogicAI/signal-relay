@@ -338,19 +338,30 @@ describe('SocioLogicClient', () => {
     });
 
     it('should handle timeout', async () => {
+      // Use fake timers to avoid 30+ second wait
+      vi.useFakeTimers();
+
       server.use(
         http.get(`${API_BASE}/api/v1/auth/validate`, async () => {
-          await delay(35000); // Longer than default 30s timeout
+          // This handler won't complete before timeout
+          await delay(60000);
           return HttpResponse.json({ data: {} });
         })
       );
 
-      // Create client and call with default timeout
-      const result = await client.getCreditsBalance();
+      // Start the request (don't await yet)
+      const resultPromise = client.getCreditsBalance();
+
+      // Advance timers past the 30s timeout
+      await vi.advanceTimersByTimeAsync(31000);
+
+      const result = await resultPromise;
 
       expect(result.error).toBeDefined();
       expect(result.error?.code).toBe('TIMEOUT');
-    }, 40000);
+
+      vi.useRealTimers();
+    });
 
     it('should handle HTTP 500 errors', async () => {
       server.use(

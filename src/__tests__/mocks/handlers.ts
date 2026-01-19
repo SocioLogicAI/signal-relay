@@ -276,8 +276,8 @@ export const handlers = [
     });
   }),
 
-  // Export campaign
-  http.get(`${API_BASE}/api/v1/campaigns/:id/export`, ({ request }) => {
+  // Export campaign - respects format query parameter
+  http.get(`${API_BASE}/api/v1/campaigns/:id/export`, ({ request, params }) => {
     const apiKey = request.headers.get('X-API-Key');
     if (!apiKey) {
       return HttpResponse.json(
@@ -286,6 +286,23 @@ export const handlers = [
       );
     }
 
+    const url = new URL(request.url);
+    const format = url.searchParams.get('format') || 'pdf';
+    const { id } = params;
+
+    if (format === 'pdf') {
+      // PDF format returns a URL, not the actual data
+      return HttpResponse.json({
+        data: {
+          export_url: `${API_BASE}/api/v1/campaigns/${id}/export?format=pdf`,
+          format: 'pdf',
+          message: 'Use the export_url to download the PDF report. Include your API key in the X-API-Key header.',
+        },
+        meta: { request_id: 'req_export' },
+      });
+    }
+
+    // JSON format returns actual campaign data
     return HttpResponse.json({
       data: { export_data: mockCampaign },
       meta: { request_id: 'req_export' },

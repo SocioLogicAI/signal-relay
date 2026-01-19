@@ -80,7 +80,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(body.serverInfo).toBeDefined();
       expect(body.serverInfo.name).toBe('signal-relay-mcp');
       expect(body.tools).toBeDefined();
-      expect(body.tools).toHaveLength(15);
+      expect(body.tools).toHaveLength(20);
       expect(body.authentication).toBeDefined();
       expect(body.authentication.required).toBe(true);
     });
@@ -429,7 +429,7 @@ describe('Cloudflare Workers Handler', () => {
   });
 
   describe('MCP Protocol: tools/list', () => {
-    it('should list all 15 tools', async () => {
+    it('should list all 20 tools', async () => {
       const request = createRequest('/', {
         method: 'POST',
         headers: { 'X-API-Key': VALID_API_KEY },
@@ -440,7 +440,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(response.status).toBe(200);
 
       const body = await response.json();
-      expect(body.result.tools).toHaveLength(15);
+      expect(body.result.tools).toHaveLength(20);
     });
 
     it('should include JSON schema for each tool', async () => {

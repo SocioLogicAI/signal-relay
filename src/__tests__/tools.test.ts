@@ -2,7 +2,7 @@
  * Tests for MCP Tool Definitions and Zod Schemas
  *
  * Tests cover:
- * - All 15 tool schemas validate correctly
+ * - All 20 tool schemas validate correctly
  * - Required vs optional fields
  * - Type coercion and defaults
  * - Error messages for invalid input
@@ -26,11 +26,17 @@ import {
   CreateFocusGroupSchema,
   AddPersonasToFocusGroupSchema,
   GetCreditsBalanceSchema,
+  GetX402DiscoverySchema,
+  // Web research schemas
+  ScrapeUrlSchema,
+  SearchWebSchema,
+  ResearchTopicSchema,
+  GetCompanyInfoSchema,
 } from '../tools';
 
 describe('Tool Definitions', () => {
-  it('should have 15 tool definitions', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(15);
+  it('should have 20 tool definitions', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(20);
   });
 
   it('should have unique tool names', () => {
@@ -71,6 +77,12 @@ describe('Tool Definitions', () => {
       'sociologic_list_focus_groups',
       'sociologic_get_focus_group',
       'sociologic_get_credits_balance',
+      'sociologic_get_x402_discovery',
+      // Web research tools (all read-only)
+      'sociologic_scrape_url',
+      'sociologic_search_web',
+      'sociologic_research_topic',
+      'sociologic_get_company_info',
     ];
 
     readOnlyTools.forEach((name) => {
@@ -691,5 +703,194 @@ describe('GetCreditsBalanceSchema', () => {
 
     // Zod strips extra properties by default
     expect(result.success).toBe(true);
+  });
+});
+
+// ============================================
+// WEB RESEARCH SCHEMAS (Firecrawl integration)
+// ============================================
+
+describe('ScrapeUrlSchema', () => {
+  it('should accept valid URL', () => {
+    const result = ScrapeUrlSchema.safeParse({
+      url: 'https://example.com',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should apply defaults', () => {
+    const result = ScrapeUrlSchema.safeParse({
+      url: 'https://example.com',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.formats).toEqual(['markdown']);
+      expect(result.data.only_main_content).toBe(true);
+    }
+  });
+
+  it('should accept multiple formats', () => {
+    const result = ScrapeUrlSchema.safeParse({
+      url: 'https://example.com',
+      formats: ['markdown', 'html', 'links'],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject invalid URL', () => {
+    const result = ScrapeUrlSchema.safeParse({
+      url: 'not-a-url',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject missing URL', () => {
+    const result = ScrapeUrlSchema.safeParse({});
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SearchWebSchema', () => {
+  it('should accept valid query', () => {
+    const result = SearchWebSchema.safeParse({
+      query: 'test search query',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should apply default limit', () => {
+    const result = SearchWebSchema.safeParse({
+      query: 'test',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.limit).toBe(5);
+    }
+  });
+
+  it('should accept custom limit', () => {
+    const result = SearchWebSchema.safeParse({
+      query: 'test',
+      limit: 10,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.limit).toBe(10);
+    }
+  });
+
+  it('should reject empty query', () => {
+    const result = SearchWebSchema.safeParse({
+      query: '',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject query exceeding max length', () => {
+    const result = SearchWebSchema.safeParse({
+      query: 'x'.repeat(501),
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject limit over 10', () => {
+    const result = SearchWebSchema.safeParse({
+      query: 'test',
+      limit: 11,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('ResearchTopicSchema', () => {
+  it('should accept valid topic', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: 'artificial intelligence trends',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should apply default source_count', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: 'test topic',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.source_count).toBe(3);
+    }
+  });
+
+  it('should accept custom source_count', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: 'test topic',
+      source_count: 5,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.source_count).toBe(5);
+    }
+  });
+
+  it('should reject empty topic', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: '',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject topic exceeding max length', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: 'x'.repeat(501),
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject source_count over 5', () => {
+    const result = ResearchTopicSchema.safeParse({
+      topic: 'test',
+      source_count: 6,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('GetCompanyInfoSchema', () => {
+  it('should accept valid URL', () => {
+    const result = GetCompanyInfoSchema.safeParse({
+      url: 'https://example.com',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject invalid URL', () => {
+    const result = GetCompanyInfoSchema.safeParse({
+      url: 'not-a-url',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject missing URL', () => {
+    const result = GetCompanyInfoSchema.safeParse({});
+
+    expect(result.success).toBe(false);
   });
 });

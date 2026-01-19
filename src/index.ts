@@ -26,6 +26,15 @@ import {
   GetFocusGroupSchema,
   CreateFocusGroupSchema,
   AddPersonasToFocusGroupSchema,
+  // x402 payment schemas
+  CreatePersonaWithPaymentSchema,
+  InterviewPersonaWithPaymentSchema,
+  GetX402DiscoverySchema,
+  // Web research schemas (Firecrawl integration)
+  ScrapeUrlSchema,
+  SearchWebSchema,
+  ResearchTopicSchema,
+  GetCompanyInfoSchema,
 } from "./tools";
 
 // ============================================
@@ -120,6 +129,12 @@ class MCPHandler {
         case "tools/call":
           return this.handleToolsCall(id, params as { name: string; arguments: unknown });
 
+        case "prompts/list":
+          return this.handlePromptsList(id);
+
+        case "resources/list":
+          return this.handleResourcesList(id);
+
         case "ping":
           return { jsonrpc: "2.0", id, result: { pong: true } };
 
@@ -168,10 +183,12 @@ class MCPHandler {
         protocolVersion: "2024-11-05",
         capabilities: {
           tools: {},
+          prompts: {},
+          resources: {},
         },
         serverInfo: {
           name: "sociologic-mcp-server",
-          version: "1.0.0",
+          version: "1.0.2",
           description: "SocioLogic Revenue Intelligence Platform - High-fidelity synthetic personas for market research",
         },
       },
@@ -190,6 +207,7 @@ class MCPHandler {
         name: tool.name,
         description: tool.description,
         inputSchema: jsonSchema,
+        annotations: tool.annotations,
       };
     });
 
@@ -197,6 +215,94 @@ class MCPHandler {
       jsonrpc: "2.0",
       id,
       result: { tools },
+    };
+  }
+
+  private handlePromptsList(id: string | number): MCPResponse {
+    const prompts = [
+      {
+        name: "interview_persona",
+        description: "Interview a synthetic persona to get feedback on your product, service, or idea",
+        arguments: [
+          {
+            name: "persona_type",
+            description: "Type of persona to interview (e.g., 'enterprise buyer', 'startup founder', 'skeptical customer')",
+            required: false,
+          },
+          {
+            name: "topic",
+            description: "The topic or question you want to explore with the persona",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "run_research_campaign",
+        description: "Run a multi-persona research campaign to gather diverse perspectives",
+        arguments: [
+          {
+            name: "research_question",
+            description: "The main research question you want to answer",
+            required: true,
+          },
+          {
+            name: "persona_count",
+            description: "Number of personas to interview (default: 10)",
+            required: false,
+          },
+        ],
+      },
+      {
+        name: "competitive_analysis",
+        description: "Get synthetic customer perspectives on competitive products",
+        arguments: [
+          {
+            name: "product",
+            description: "Your product or service name",
+            required: true,
+          },
+          {
+            name: "competitors",
+            description: "Comma-separated list of competitor names",
+            required: true,
+          },
+        ],
+      },
+    ];
+
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: { prompts },
+    };
+  }
+
+  private handleResourcesList(id: string | number): MCPResponse {
+    const resources = [
+      {
+        uri: "sociologic://personas/marketplace",
+        name: "Persona Marketplace",
+        description: "Browse available synthetic personas in the SocioLogic marketplace",
+        mimeType: "application/json",
+      },
+      {
+        uri: "sociologic://campaigns/templates",
+        name: "Campaign Templates",
+        description: "Pre-built research campaign templates for common use cases",
+        mimeType: "application/json",
+      },
+      {
+        uri: "sociologic://account/credits",
+        name: "Credits Balance",
+        description: "Your current SocioLogic credits balance and usage",
+        mimeType: "application/json",
+      },
+    ];
+
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: { resources },
     };
   }
 
@@ -246,18 +352,44 @@ class MCPHandler {
       }
 
       case "sociologic_create_persona": {
-        const parsed = safeParseArgs(CreatePersonaSchema, args);
-        return this.client.createPersona(parsed);
+        const parsed = safeParseArgs(CreatePersonaWithPaymentSchema, args);
+        // Extract x402 payment config if provided
+        const x402Payment = parsed.x402_payment
+          ? {
+              payload: parsed.x402_payment.payload,
+              scheme: parsed.x402_payment.scheme,
+              network: parsed.x402_payment.network,
+            }
+          : undefined;
+        return this.client.createPersona(
+          {
+            description: parsed.description,
+            fidelity_tier: parsed.fidelity_tier,
+          },
+          x402Payment
+        );
       }
 
       case "sociologic_interview_persona": {
-        const parsed = safeParseArgs(InterviewPersonaSchema, args);
-        return this.client.interviewPersona(parsed.slug, {
-          message: parsed.message,
-          conversation_id: parsed.conversation_id,
-          include_memory: parsed.include_memory,
-          save_conversation: parsed.save_conversation,
-        });
+        const parsed = safeParseArgs(InterviewPersonaWithPaymentSchema, args);
+        // Extract x402 payment config if provided
+        const x402Payment = parsed.x402_payment
+          ? {
+              payload: parsed.x402_payment.payload,
+              scheme: parsed.x402_payment.scheme,
+              network: parsed.x402_payment.network,
+            }
+          : undefined;
+        return this.client.interviewPersona(
+          parsed.slug,
+          {
+            message: parsed.message,
+            conversation_id: parsed.conversation_id,
+            include_memory: parsed.include_memory,
+            save_conversation: parsed.save_conversation,
+          },
+          x402Payment
+        );
       }
 
       case "sociologic_get_persona_memories": {
@@ -320,6 +452,43 @@ class MCPHandler {
         return this.client.getCreditsBalance();
       }
 
+      case "sociologic_get_x402_discovery": {
+        return this.client.getX402Discovery();
+      }
+
+      // Web Research Tools (Firecrawl integration)
+      case "sociologic_scrape_url": {
+        const parsed = safeParseArgs(ScrapeUrlSchema, args);
+        return this.client.scrapeUrl({
+          url: parsed.url,
+          formats: parsed.formats,
+          only_main_content: parsed.only_main_content,
+        });
+      }
+
+      case "sociologic_search_web": {
+        const parsed = safeParseArgs(SearchWebSchema, args);
+        return this.client.searchWeb({
+          query: parsed.query,
+          limit: parsed.limit,
+        });
+      }
+
+      case "sociologic_research_topic": {
+        const parsed = safeParseArgs(ResearchTopicSchema, args);
+        return this.client.researchTopic({
+          topic: parsed.topic,
+          source_count: parsed.source_count,
+        });
+      }
+
+      case "sociologic_get_company_info": {
+        const parsed = safeParseArgs(GetCompanyInfoSchema, args);
+        return this.client.getCompanyInfo({
+          url: parsed.url,
+        });
+      }
+
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -364,22 +533,104 @@ export default {
           target: "jsonSchema7",
           $refStrategy: "none",
         }),
+        annotations: t.annotations,
       }));
 
       return new Response(
         JSON.stringify({
           serverInfo: {
             name: "signal-relay-mcp",
+            displayName: "Signal Relay - Revenue Intelligence for AI Agents",
             version: "1.0.2",
+            icon: "https://www.sociologic.ai/apple-touch-icon.png",
           },
           authentication: {
             required: true,
             schemes: ["apiKey"],
             instructions: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
           },
+          configSchema: {
+            type: "object",
+            properties: {
+              apiKey: {
+                type: "string",
+                title: "API Key",
+                description: "Your SocioLogic API key for authentication. Get one at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
+              },
+            },
+            required: ["apiKey"],
+          },
           tools: toolsWithSchema,
-          resources: [],
-          prompts: [],
+          resources: [
+            {
+              uri: "sociologic://personas/marketplace",
+              name: "Persona Marketplace",
+              description: "Browse available synthetic personas in the SocioLogic marketplace",
+              mimeType: "application/json",
+            },
+            {
+              uri: "sociologic://campaigns/templates",
+              name: "Campaign Templates",
+              description: "Pre-built research campaign templates for common use cases",
+              mimeType: "application/json",
+            },
+            {
+              uri: "sociologic://account/credits",
+              name: "Credits Balance",
+              description: "Your current SocioLogic credits balance and usage",
+              mimeType: "application/json",
+            },
+          ],
+          prompts: [
+            {
+              name: "interview_persona",
+              description: "Interview a synthetic persona to get feedback on your product, service, or idea",
+              arguments: [
+                {
+                  name: "persona_type",
+                  description: "Type of persona to interview (e.g., 'enterprise buyer', 'startup founder')",
+                  required: false,
+                },
+                {
+                  name: "topic",
+                  description: "The topic or question you want to explore with the persona",
+                  required: true,
+                },
+              ],
+            },
+            {
+              name: "run_research_campaign",
+              description: "Run a multi-persona research campaign to gather diverse perspectives",
+              arguments: [
+                {
+                  name: "research_question",
+                  description: "The main research question you want to answer",
+                  required: true,
+                },
+                {
+                  name: "persona_count",
+                  description: "Number of personas to interview (default: 10)",
+                  required: false,
+                },
+              ],
+            },
+            {
+              name: "competitive_analysis",
+              description: "Get synthetic customer perspectives on competitive products",
+              arguments: [
+                {
+                  name: "product",
+                  description: "Your product or service name",
+                  required: true,
+                },
+                {
+                  name: "competitors",
+                  description: "Comma-separated list of competitor names",
+                  required: true,
+                },
+              ],
+            },
+          ],
         }),
         {
           headers: {

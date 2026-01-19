@@ -21,13 +21,27 @@ description: |
   - AI agents conducting autonomous market research
 
 author: SocioLogic
-authorUrl: https://sociologic.ai
+authorUrl: https://www.sociologic.ai
 repository: https://github.com/SocioLogicAI/signal-relay
-homepage: https://sociologic.ai/signal-relay
-documentation: https://sociologic.ai/docs
+homepage: https://www.sociologic.ai/signal-relay
+documentation: https://www.sociologic.ai/docs
+icon: https://www.sociologic.ai/apple-touch-icon.png
 
 license: MIT
 version: 1.0.2
+
+# Configuration schema for Smithery
+configSchema:
+  type: object
+  properties:
+    apiKey:
+      type: string
+      title: API Key
+      description: "Your SocioLogic API key for authentication. Get one at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)"
+      x-from:
+        header: X-API-Key
+  required:
+    - apiKey
 
 # Server configuration
 server:

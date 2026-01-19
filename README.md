@@ -7,7 +7,7 @@ A remote MCP (Model Context Protocol) server that connects AI agents to [SocioLo
 
 ## Features
 
-- **15 MCP Tools** - Full access to personas, campaigns, focus groups, and credits
+- **20 MCP Tools** - Full access to personas, campaigns, focus groups, credits, and web research
 - **High-Fidelity Personas** - Synthetic personas with consistent demographics, psychographics, and behavior
 - **Semantic Memory** - RAG-powered memory retrieval for persona continuity across conversations
 - **Edge Deployed** - Runs on Cloudflare Workers (300+ locations, <50ms latency)
@@ -110,6 +110,10 @@ Starts a local server at `http://localhost:8787`.
 | `sociologic_create_focus_group` | Create new focus group to organize personas |
 | `sociologic_add_personas_to_focus_group` | Add personas to an existing focus group |
 | `sociologic_get_credits_balance` | Check current credits balance and usage |
+| `sociologic_scrape_url` | Scrape content from a URL (web research) |
+| `sociologic_search_web` | Search the web and scrape results |
+| `sociologic_research_topic` | Research a topic with multiple sources |
+| `sociologic_get_company_info` | Get company information from a website |
 
 ## API Endpoints
 

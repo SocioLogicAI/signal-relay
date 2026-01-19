@@ -10,7 +10,10 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -40,8 +43,11 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241230.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "msw": "^2.7.0",
     "smithery": "^0.5.2",
     "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
     "wrangler": "^4.59.2"
   },
   "keywords": [

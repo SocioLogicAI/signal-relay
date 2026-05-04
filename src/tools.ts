@@ -528,7 +528,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: "sociologic_rng_random",
-    description: "Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness.",
+    description: "Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness. Returns a float. Use sociologic_rng_int for integers in a specific range.",
     inputSchema: RngRandomSchema,
     annotations: {
       title: "Random Number (0-1)",

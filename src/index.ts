@@ -35,6 +35,14 @@ import {
   SearchWebSchema,
   ResearchTopicSchema,
   GetCompanyInfoSchema,
+  // RNG schemas
+  RngUuidSchema,
+  RngRandomSchema,
+  RngIntSchema,
+  RngDiceSchema,
+  RngCoinSchema,
+  RngShuffleSchema,
+  RngWeightedSchema,
 } from "./tools";
 
 // ============================================
@@ -487,6 +495,42 @@ class MCPHandler {
         return this.client.getCompanyInfo({
           url: parsed.url,
         });
+      }
+
+      // RNG Tools (Cryptographic randomness)
+      case "sociologic_rng_uuid": {
+        safeParseArgs(RngUuidSchema, args);
+        return this.client.rngUuid();
+      }
+
+      case "sociologic_rng_random": {
+        safeParseArgs(RngRandomSchema, args);
+        return this.client.rngRandom();
+      }
+
+      case "sociologic_rng_int": {
+        const parsed = safeParseArgs(RngIntSchema, args);
+        return this.client.rngInt({ min: parsed.min, max: parsed.max });
+      }
+
+      case "sociologic_rng_dice": {
+        const parsed = safeParseArgs(RngDiceSchema, args);
+        return this.client.rngDice({ sides: parsed.sides });
+      }
+
+      case "sociologic_rng_coin": {
+        safeParseArgs(RngCoinSchema, args);
+        return this.client.rngCoin();
+      }
+
+      case "sociologic_rng_shuffle": {
+        const parsed = safeParseArgs(RngShuffleSchema, args);
+        return this.client.rngShuffle({ items: parsed.items });
+      }
+
+      case "sociologic_rng_weighted": {
+        const parsed = safeParseArgs(RngWeightedSchema, args);
+        return this.client.rngWeighted({ items: parsed.items, weights: parsed.weights });
       }
 
       default:

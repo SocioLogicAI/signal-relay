@@ -545,4 +545,65 @@ export class SocioLogicClient {
       cost_usdc?: number;
     }>("POST", "/api/v1/research/company", params, undefined, 60000);
   }
+
+  // ============================================
+  // RNG (Cryptographic Randomness)
+  // ============================================
+
+  /**
+   * Generate a cryptographically random UUID v4
+   */
+  async rngUuid() {
+    return this.request<{ uuid: string }>("GET", "/api/v1/rng/uuid");
+  }
+
+  /**
+   * Generate a cryptographically random float between 0 and 1
+   */
+  async rngRandom() {
+    return this.request<{ value: number }>("GET", "/api/v1/rng/random");
+  }
+
+  /**
+   * Generate a cryptographically random integer within a range
+   */
+  async rngInt(params: { min?: number; max?: number }) {
+    return this.request<{ value: number; min: number; max: number }>(
+      "GET", "/api/v1/rng/int", undefined, params
+    );
+  }
+
+  /**
+   * Roll a cryptographically random die
+   */
+  async rngDice(params: { sides?: number }) {
+    return this.request<{ value: number; sides: number }>(
+      "GET", "/api/v1/rng/dice", undefined, params
+    );
+  }
+
+  /**
+   * Flip a cryptographically random coin
+   */
+  async rngCoin() {
+    return this.request<{ result: string }>("GET", "/api/v1/rng/coin");
+  }
+
+  /**
+   * Randomly shuffle an array of items
+   */
+  async rngShuffle(params: { items: unknown[] }) {
+    return this.request<{ shuffled: unknown[] }>(
+      "POST", "/api/v1/rng/shuffle", params
+    );
+  }
+
+  /**
+   * Select a random item using weighted probabilities
+   */
+  async rngWeighted(params: { items: unknown[]; weights: number[] }) {
+    return this.request<{ selected: unknown; index: number }>(
+      "POST", "/api/v1/rng/weighted", params
+    );
+  }
 }

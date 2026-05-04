@@ -230,6 +230,40 @@ export const GetCompanyInfoSchema = z.object({
 });
 
 // ============================================
+// RNG SCHEMAS
+// ============================================
+
+export const RngUuidSchema = z.object({});
+
+export const RngRandomSchema = z.object({});
+
+export const RngCoinSchema = z.object({});
+
+export const RngIntSchema = z.object({
+  min: z.number().int().optional().default(0)
+    .describe("Minimum value (inclusive)"),
+  max: z.number().int().optional().default(100)
+    .describe("Maximum value (inclusive)"),
+});
+
+export const RngDiceSchema = z.object({
+  sides: z.number().int().min(2).max(1000).optional().default(6)
+    .describe("Number of sides on the die (2-1000)"),
+});
+
+export const RngShuffleSchema = z.object({
+  items: z.array(z.unknown()).min(1).max(1000)
+    .describe("Array of items to shuffle (1-1000 items)"),
+});
+
+export const RngWeightedSchema = z.object({
+  items: z.array(z.unknown()).min(1).max(1000)
+    .describe("Array of items to choose from (1-1000 items)"),
+  weights: z.array(z.number()).min(1).max(1000)
+    .describe("Array of numeric weights corresponding to each item"),
+});
+
+// ============================================
 // TOOL DEFINITIONS (for MCP)
 // ============================================
 
@@ -474,6 +508,93 @@ export const TOOL_DEFINITIONS = [
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,
+      openWorldHint: true,
+    },
+  },
+  // ============================================
+  // RNG TOOLS (Cryptographic randomness)
+  // ============================================
+  {
+    name: "sociologic_rng_uuid",
+    description: "Generate a cryptographically random UUID v4. Useful for creating unique identifiers for experiments, sessions, or tracking.",
+    inputSchema: RngUuidSchema,
+    annotations: {
+      title: "Generate UUID",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_random",
+    description: "Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness.",
+    inputSchema: RngRandomSchema,
+    annotations: {
+      title: "Random Number (0-1)",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_int",
+    description: "Generate a cryptographically random integer within a range. Default range is 0-100. Uses hardware entropy for true randomness.",
+    inputSchema: RngIntSchema,
+    annotations: {
+      title: "Random Integer",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_dice",
+    description: "Roll a cryptographically random die with a configurable number of sides. Default is a 6-sided die. Uses hardware entropy for true randomness.",
+    inputSchema: RngDiceSchema,
+    annotations: {
+      title: "Roll Dice",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_coin",
+    description: "Flip a cryptographically random coin. Returns heads or tails. Uses hardware entropy for true randomness.",
+    inputSchema: RngCoinSchema,
+    annotations: {
+      title: "Flip Coin",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_shuffle",
+    description: "Randomly shuffle an array of items using the Fisher-Yates algorithm with cryptographic randomness. Useful for randomizing survey question order, A/B test assignments, or persona selection.",
+    inputSchema: RngShuffleSchema,
+    annotations: {
+      title: "Shuffle Items",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: "sociologic_rng_weighted",
+    description: "Select a random item from an array using weighted probabilities with cryptographic randomness. Useful for simulating demographic distributions, market share splits, or probability-based scenarios.",
+    inputSchema: RngWeightedSchema,
+    annotations: {
+      title: "Weighted Random Selection",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
       openWorldHint: true,
     },
   },

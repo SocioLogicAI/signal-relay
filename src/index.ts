@@ -918,7 +918,24 @@ export default {
       );
     }
 
-    // 404 for unknown paths — use plain text to avoid SDK trying to parse as OAuth
+    // OAuth endpoints — return proper OAuth error JSON so the SDK parses cleanly
+    if (["/register", "/authorize", "/token"].includes(url.pathname)) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_request",
+          error_description: "This server uses API key authentication. Set X-API-Key in your MCP config headers.",
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
+    }
+
+    // 404 for everything else
     return new Response("Not Found", {
       status: 404,
       headers: {

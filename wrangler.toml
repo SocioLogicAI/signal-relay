@@ -10,7 +10,7 @@ SOCIOLOGIC_API_URL = "https://www.sociologic.ai"
 # Create via: npx wrangler kv namespace create OAUTH_KV
 [[kv_namespaces]]
 binding = "OAUTH_KV"
-id = "TODO_CREATE_KV_NAMESPACE"
+id = "283d6a4cf15c428c85a1a6dd7b52eca1"
 
 # Production environment
 [env.production]

@@ -918,22 +918,12 @@ export default {
       );
     }
 
-    // 404 for unknown paths
-    return new Response(
-      JSON.stringify({
-        error: {
-          code: "NOT_FOUND",
-          message: `Unknown endpoint: ${path}`,
-          available_endpoints: ["/", "/sse", "/health", "/info"],
-        },
-      }),
-      {
-        status: 404,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    // 404 for unknown paths — use plain text to avoid SDK trying to parse as OAuth
+    return new Response("Not Found", {
+      status: 404,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   },
 };

@@ -2,7 +2,7 @@
  * Tests for MCP Tool Definitions and Zod Schemas
  *
  * Tests cover:
- * - All 20 tool schemas validate correctly
+ * - All 26 tool schemas validate correctly
  * - Required vs optional fields
  * - Type coercion and defaults
  * - Error messages for invalid input
@@ -34,8 +34,8 @@ import {
 } from '../tools';
 
 describe('Tool Definitions', () => {
-  it('should have 19 tool definitions', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(19);
+  it('should have 26 tool definitions', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(26);
   });
 
   it('should have unique tool names', () => {

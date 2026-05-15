@@ -80,7 +80,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(body.serverInfo).toBeDefined();
       expect(body.serverInfo.name).toBe('signal-relay-mcp');
       expect(body.tools).toBeDefined();
-      expect(body.tools).toHaveLength(20);
+      expect(body.tools).toHaveLength(26);
       expect(body.authentication).toBeDefined();
       expect(body.authentication.required).toBe(true);
     });
@@ -429,7 +429,7 @@ describe('Cloudflare Workers Handler', () => {
   });
 
   describe('MCP Protocol: tools/list', () => {
-    it('should list all 20 tools', async () => {
+    it('should list all 26 tools', async () => {
       const request = createRequest('/', {
         method: 'POST',
         headers: { 'X-API-Key': VALID_API_KEY },
@@ -440,7 +440,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(response.status).toBe(200);
 
       const body = await response.json();
-      expect(body.result.tools).toHaveLength(20);
+      expect(body.result.tools).toHaveLength(26);
     });
 
     it('should include JSON schema for each tool', async () => {
@@ -513,26 +513,6 @@ describe('Cloudflare Workers Handler', () => {
       expect(body.result.content).toBeDefined();
     });
 
-    it('should call sociologic_interview_persona', async () => {
-      const request = createRequest('/', {
-        method: 'POST',
-        headers: { 'X-API-Key': VALID_API_KEY },
-        body: createJsonRpcRequest('tools/call', {
-          name: 'sociologic_interview_persona',
-          arguments: {
-            slug: 'alex-chen',
-            message: 'What do you think about cloud security?',
-          },
-        }),
-      });
-
-      const response = await worker.fetch(request, mockEnv);
-      expect(response.status).toBe(200);
-
-      const body = await response.json();
-      expect(body.result.content).toBeDefined();
-    });
-
     it('should return error for unknown tool', async () => {
       const request = createRequest('/', {
         method: 'POST',
@@ -595,11 +575,11 @@ describe('Cloudflare Workers Handler', () => {
       const response = await worker.fetch(request, mockEnv);
       const body = await response.json();
 
-      const interviewPrompt = body.result.prompts.find(
-        (p: { name: string }) => p.name === 'interview_persona'
+      const researchPrompt = body.result.prompts.find(
+        (p: { name: string }) => p.name === 'run_research_campaign'
       );
-      expect(interviewPrompt).toBeDefined();
-      expect(interviewPrompt.arguments).toBeDefined();
+      expect(researchPrompt).toBeDefined();
+      expect(researchPrompt.arguments).toBeDefined();
     });
   });
 

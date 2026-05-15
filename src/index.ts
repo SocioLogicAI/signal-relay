@@ -658,7 +658,10 @@ export default {
       request.headers.get("Authorization")?.replace("Bearer ", "")
     )?.trim();
 
-    if (!apiKey) {
+    // Only require auth on POST (MCP JSON-RPC calls).
+    // GET requests (SDK discovery probes, /info, /health) are handled below
+    // and either don't need auth or check it themselves.
+    if (!apiKey && request.method === "POST") {
       return new Response(
         JSON.stringify({
           error: "unauthorized",

@@ -249,8 +249,8 @@ describe('Cloudflare Workers Handler', () => {
       const response = await worker.fetch(request, mockEnv);
       expect(response.status).toBe(404);
 
-      const body = await response.json();
-      expect(body.error.code).toBe('NOT_FOUND');
+      const body = await response.text();
+      expect(body).toBe('Not Found');
     });
   });
 

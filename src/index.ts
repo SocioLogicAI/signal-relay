@@ -658,10 +658,12 @@ export default {
       request.headers.get("Authorization")?.replace("Bearer ", "")
     )?.trim();
 
-    // Only require auth on POST (MCP JSON-RPC calls).
-    // GET requests (SDK discovery probes, /info, /health) are handled below
-    // and either don't need auth or check it themselves.
-    if (!apiKey && request.method === "POST") {
+    // Only require auth on POST to MCP JSON-RPC endpoints.
+    // Non-MCP paths (e.g. /register, /token, /authorize) must NOT return 401
+    // because the MCP SDK probes those OAuth endpoints during discovery.
+    // Returning 401 on those paths causes "SDK auth failed" errors in clients.
+    const mcpPaths = ["/", "/mcp", "/rpc"];
+    if (!apiKey && request.method === "POST" && mcpPaths.includes(url.pathname)) {
       return new Response(
         JSON.stringify({
           error: "unauthorized",

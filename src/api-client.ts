@@ -226,7 +226,6 @@ export class SocioLogicClient {
   async listPersonas(params: {
     visibility?: "public" | "private" | "all";
     category?: string;
-    fidelity_tier?: string;
     search?: string;
     page?: number;
     per_page?: number;
@@ -249,38 +248,11 @@ export class SocioLogicClient {
   async createPersona(
     params: {
       description: string;
-      fidelity_tier?: string;
+      include_avatar?: boolean;
     },
     x402Payment?: X402PaymentConfig
   ) {
     return this.request<unknown>("POST", "/api/v1/personas", params, undefined, 30000, x402Payment);
-  }
-
-  async interviewPersona(
-    slug: string,
-    params: {
-      message: string;
-      conversation_id?: string;
-      include_memory?: boolean;
-      save_conversation?: boolean;
-      stream?: boolean;
-    },
-    x402Payment?: X402PaymentConfig
-  ) {
-    // Note: Streaming is handled differently - this returns non-streaming response
-    return this.request<{
-      response: string;
-      conversation_id: string;
-      persona: {
-        id: string;
-        slug: string;
-        name: string;
-      };
-      memory_context_used: boolean;
-    }>("POST", `/api/v1/personas/${encodeURIComponent(slug)}/interview`, {
-      ...params,
-      stream: false, // Force non-streaming for MCP
-    }, undefined, 30000, x402Payment);
   }
 
   async getPersonaMemories(
@@ -329,7 +301,6 @@ export class SocioLogicClient {
     }>;
     persona_brief?: string;
     persona_count?: number;
-    fidelity_tier?: string;
     existing_persona_ids?: string[];
     focus_group_ids?: string[];
     research_context?: {

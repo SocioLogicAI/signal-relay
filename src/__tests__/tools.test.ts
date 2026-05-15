@@ -14,7 +14,6 @@ import {
   ListPersonasSchema,
   GetPersonaSchema,
   CreatePersonaSchema,
-  InterviewPersonaSchema,
   GetPersonaMemoriesSchema,
   ListCampaignsSchema,
   GetCampaignSchema,
@@ -35,8 +34,8 @@ import {
 } from '../tools';
 
 describe('Tool Definitions', () => {
-  it('should have 20 tool definitions', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(20);
+  it('should have 19 tool definitions', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(19);
   });
 
   it('should have unique tool names', () => {
@@ -94,7 +93,6 @@ describe('Tool Definitions', () => {
   it('should mark mutating tools correctly', () => {
     const mutatingTools = [
       'sociologic_create_persona',
-      'sociologic_interview_persona',
       'sociologic_create_campaign',
       'sociologic_execute_campaign',
       'sociologic_create_focus_group',
@@ -113,7 +111,6 @@ describe('ListPersonasSchema', () => {
     const result = ListPersonasSchema.safeParse({
       visibility: 'public',
       category: 'enterprise',
-      fidelity_tier: 'enhanced',
       search: 'buyer',
       page: 1,
       per_page: 20,
@@ -136,14 +133,6 @@ describe('ListPersonasSchema', () => {
   it('should reject invalid visibility', () => {
     const result = ListPersonasSchema.safeParse({
       visibility: 'invalid',
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject invalid fidelity tier', () => {
-    const result = ListPersonasSchema.safeParse({
-      fidelity_tier: 'invalid',
     });
 
     expect(result.success).toBe(false);
@@ -194,20 +183,20 @@ describe('CreatePersonaSchema', () => {
   it('should accept valid input', () => {
     const result = CreatePersonaSchema.safeParse({
       description: 'A tech-savvy millennial startup founder',
-      fidelity_tier: 'enhanced',
+      include_avatar: true,
     });
 
     expect(result.success).toBe(true);
   });
 
-  it('should apply default fidelity tier', () => {
+  it('should apply default include_avatar', () => {
     const result = CreatePersonaSchema.safeParse({
       description: 'A tech-savvy millennial startup founder',
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.fidelity_tier).toBe('enhanced');
+      expect(result.data.include_avatar).toBe(false);
     }
   });
 
@@ -222,79 +211,6 @@ describe('CreatePersonaSchema', () => {
   it('should reject too long description', () => {
     const result = CreatePersonaSchema.safeParse({
       description: 'x'.repeat(2001),
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should accept all fidelity tiers', () => {
-    const tiers = ['standard', 'enhanced', 'premium', 'ultra'];
-    tiers.forEach((tier) => {
-      const result = CreatePersonaSchema.safeParse({
-        description: 'A valid description here',
-        fidelity_tier: tier,
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-});
-
-describe('InterviewPersonaSchema', () => {
-  it('should accept valid input', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: 'What do you think about cloud security?',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should apply defaults', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: 'Hello',
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.include_memory).toBe(true);
-      expect(result.data.save_conversation).toBe(true);
-    }
-  });
-
-  it('should accept conversation_id for continuation', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: 'Follow up question',
-      conversation_id: '123e4567-e89b-12d3-a456-426614174000',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject invalid UUID for conversation_id', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: 'Hello',
-      conversation_id: 'not-a-uuid',
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject too long message', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: 'x'.repeat(4001),
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject empty message', () => {
-    const result = InterviewPersonaSchema.safeParse({
-      slug: 'alex-chen',
-      message: '',
     });
 
     expect(result.success).toBe(false);
@@ -409,7 +325,7 @@ describe('CreateCampaignSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should apply default fidelity tier', () => {
+  it('should apply default persona_count', () => {
     const result = CreateCampaignSchema.safeParse({
       name: 'Test Campaign',
       questions: [validQuestion],
@@ -417,7 +333,6 @@ describe('CreateCampaignSchema', () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.fidelity_tier).toBe('enhanced');
       expect(result.data.persona_count).toBe(10);
     }
   });

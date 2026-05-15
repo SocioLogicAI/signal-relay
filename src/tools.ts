@@ -15,8 +15,6 @@ export const ListPersonasSchema = z.object({
     .describe("Filter by visibility: 'public' (marketplace), 'private' (user's own), 'all' (both)"),
   category: z.string().optional()
     .describe("Filter by category"),
-  fidelity_tier: z.enum(["standard", "enhanced", "premium", "ultra"]).optional()
-    .describe("Filter by fidelity tier"),
   search: z.string().optional()
     .describe("Search in name, tagline, description"),
   page: z.number().int().positive().default(1)
@@ -33,21 +31,8 @@ export const GetPersonaSchema = z.object({
 export const CreatePersonaSchema = z.object({
   description: z.string().min(10).max(2000)
     .describe("Natural language description of the persona to create"),
-  fidelity_tier: z.enum(["standard", "enhanced", "premium", "ultra"]).default("enhanced")
-    .describe("Fidelity tier for the persona (affects depth and consistency)"),
-});
-
-export const InterviewPersonaSchema = z.object({
-  slug: z.string().min(1)
-    .describe("The persona's unique slug identifier"),
-  message: z.string().min(1).max(4000)
-    .describe("Your message/question to the persona"),
-  conversation_id: z.string().uuid().optional()
-    .describe("Optional conversation ID to continue an existing conversation"),
-  include_memory: z.boolean().default(true)
-    .describe("Whether to include persona's semantic memory context"),
-  save_conversation: z.boolean().default(true)
-    .describe("Whether to save this conversation for future reference"),
+  include_avatar: z.boolean().optional().default(false)
+    .describe("Whether to generate a profile picture. Defaults to false. Adds 0.75 credits to the cost."),
 });
 
 export const GetPersonaMemoriesSchema = z.object({
@@ -92,8 +77,6 @@ export const CreateCampaignSchema = z.object({
     .describe("Description for generating new personas (if not using existing)"),
   persona_count: z.number().int().min(1).max(50).default(10)
     .describe("Number of personas to generate (if using persona_brief)"),
-  fidelity_tier: z.enum(["standard", "enhanced", "premium", "ultra"]).default("enhanced")
-    .describe("Fidelity tier for generated personas"),
   existing_persona_ids: z.array(z.string().uuid()).optional()
     .describe("Use existing personas instead of generating new ones"),
   focus_group_ids: z.array(z.string().uuid()).optional()
@@ -162,14 +145,6 @@ export const X402PaymentSchema = z.object({
     .describe("Payment scheme (default: 'exact')"),
   network: z.string().optional()
     .describe("Network identifier (default: 'eip155:8453' for Base)"),
-});
-
-/**
- * Schema for interview with optional x402 payment
- */
-export const InterviewPersonaWithPaymentSchema = InterviewPersonaSchema.extend({
-  x402_payment: X402PaymentSchema.optional()
-    .describe("Optional x402 crypto payment to use instead of credits"),
 });
 
 /**
@@ -294,22 +269,10 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: "sociologic_create_persona",
-    description: "Create a new synthetic persona from a natural language description. The AI will generate a high-fidelity persona with consistent traits. Supports x402 crypto payments.",
+    description: "Create a new AI persona from a natural language description. Returns rich persona data including demographics, psychographics, communication style, and behavioral traits. Use the returned data to role-play as this persona in conversation, or pass it to a subagent for user research interviews.",
     inputSchema: CreatePersonaWithPaymentSchema,
     annotations: {
       title: "Create Persona",
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-  },
-  {
-    name: "sociologic_interview_persona",
-    description: "Conduct an adversarial interview with a synthetic persona. Personas are prompted to challenge ideas and reveal unknown unknowns. Supports ongoing conversations and x402 crypto payments.",
-    inputSchema: InterviewPersonaWithPaymentSchema,
-    annotations: {
-      title: "Interview Persona",
       readOnlyHint: false,
       destructiveHint: false,
       idempotentHint: false,

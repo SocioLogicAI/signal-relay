@@ -118,50 +118,10 @@ describe('SocioLogicClient', () => {
       it('should create a persona', async () => {
         const result = await client.createPersona({
           description: 'A tech-savvy millennial startup founder',
-          fidelity_tier: 'enhanced',
+          include_avatar: true,
         });
 
         expect(result.data).toBeDefined();
-      });
-    });
-
-    describe('interviewPersona', () => {
-      it('should return interview response', async () => {
-        const result = await client.interviewPersona('alex-chen', {
-          message: 'What do you think about cloud security?',
-        });
-
-        expect(result.data).toBeDefined();
-        expect(result.data?.response).toBeDefined();
-        expect(result.data?.conversation_id).toBeDefined();
-      });
-
-      it('should include memory context when specified', async () => {
-        const result = await client.interviewPersona('alex-chen', {
-          message: 'Tell me more about your concerns',
-          include_memory: true,
-        });
-
-        expect(result.data).toBeDefined();
-        expect(result.data?.memory_context_used).toBe(true);
-      });
-
-      it('should continue existing conversation', async () => {
-        const result = await client.interviewPersona('alex-chen', {
-          message: 'Follow up question',
-          conversation_id: '423e4567-e89b-12d3-a456-426614174000',
-        });
-
-        expect(result.data).toBeDefined();
-      });
-
-      it('should return error for non-existent persona', async () => {
-        const result = await client.interviewPersona('not-found', {
-          message: 'Hello',
-        });
-
-        expect(result.error).toBeDefined();
-        expect(result.error?.code).toBe('NOT_FOUND');
       });
     });
 

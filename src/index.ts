@@ -15,7 +15,6 @@ import {
   ListPersonasSchema,
   GetPersonaSchema,
   CreatePersonaSchema,
-  InterviewPersonaSchema,
   GetPersonaMemoriesSchema,
   ListCampaignsSchema,
   GetCampaignSchema,
@@ -28,7 +27,6 @@ import {
   AddPersonasToFocusGroupSchema,
   // x402 payment schemas
   CreatePersonaWithPaymentSchema,
-  InterviewPersonaWithPaymentSchema,
   GetX402DiscoverySchema,
   // Web research schemas (Firecrawl integration)
   ScrapeUrlSchema,
@@ -229,22 +227,6 @@ class MCPHandler {
   private handlePromptsList(id: string | number): MCPResponse {
     const prompts = [
       {
-        name: "interview_persona",
-        description: "Interview a synthetic persona to get feedback on your product, service, or idea",
-        arguments: [
-          {
-            name: "persona_type",
-            description: "Type of persona to interview (e.g., 'enterprise buyer', 'startup founder', 'skeptical customer')",
-            required: false,
-          },
-          {
-            name: "topic",
-            description: "The topic or question you want to explore with the persona",
-            required: true,
-          },
-        ],
-      },
-      {
         name: "run_research_campaign",
         description: "Run a multi-persona research campaign to gather diverse perspectives",
         arguments: [
@@ -372,29 +354,7 @@ class MCPHandler {
         return this.client.createPersona(
           {
             description: parsed.description,
-            fidelity_tier: parsed.fidelity_tier,
-          },
-          x402Payment
-        );
-      }
-
-      case "sociologic_interview_persona": {
-        const parsed = safeParseArgs(InterviewPersonaWithPaymentSchema, args);
-        // Extract x402 payment config if provided
-        const x402Payment = parsed.x402_payment
-          ? {
-              payload: parsed.x402_payment.payload,
-              scheme: parsed.x402_payment.scheme,
-              network: parsed.x402_payment.network,
-            }
-          : undefined;
-        return this.client.interviewPersona(
-          parsed.slug,
-          {
-            message: parsed.message,
-            conversation_id: parsed.conversation_id,
-            include_memory: parsed.include_memory,
-            save_conversation: parsed.save_conversation,
+            include_avatar: parsed.include_avatar,
           },
           x402Payment
         );
@@ -626,22 +586,6 @@ export default {
             },
           ],
           prompts: [
-            {
-              name: "interview_persona",
-              description: "Interview a synthetic persona to get feedback on your product, service, or idea",
-              arguments: [
-                {
-                  name: "persona_type",
-                  description: "Type of persona to interview (e.g., 'enterprise buyer', 'startup founder')",
-                  required: false,
-                },
-                {
-                  name: "topic",
-                  description: "The topic or question you want to explore with the persona",
-                  required: true,
-                },
-              ],
-            },
             {
               name: "run_research_campaign",
               description: "Run a multi-persona research campaign to gather diverse perspectives",

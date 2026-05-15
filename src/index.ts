@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { SocioLogicClient } from "./api-client";
 import {
   TOOL_DEFINITIONS,
@@ -76,8 +77,9 @@ function safeParseArgs<T extends z.ZodSchema>(
 
 interface Env {
   SOCIOLOGIC_API_URL?: string;
-  // KV namespace for session storage (optional, for OAuth)
-  SESSION_STORE?: KVNamespace;
+  OAUTH_KV: KVNamespace;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
 }
 
 interface MCPRequest {
@@ -500,6 +502,132 @@ class MCPHandler {
 }
 
 // ============================================
+// CORS UTILITY
+// ============================================
+
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
+  "Access-Control-Max-Age": "86400",
+};
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    headers.set(key, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+// ============================================
+// AUTH RESOLVER
+// ============================================
+
+type AuthResult =
+  | { ok: true; apiKey: string }
+  | { ok: false; reason: "no_auth" | "invalid_bearer" };
+
+async function resolveMcpAuth(request: Request, env: Env): Promise<AuthResult> {
+  const apiKeyHeader = request.headers.get("X-API-Key")?.trim();
+  if (apiKeyHeader) return { ok: true, apiKey: apiKeyHeader };
+
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    if (token.startsWith("pl_live_") || token.startsWith("pl_test_")) {
+      return { ok: true, apiKey: token };
+    }
+    const result = await (env as any).OAUTH_PROVIDER.unwrapToken(token);
+    if (result?.grant?.props?.apiKey) {
+      return { ok: true, apiKey: result.grant.props.apiKey };
+    }
+    return { ok: false, reason: "invalid_bearer" };
+  }
+
+  return { ok: false, reason: "no_auth" };
+}
+
+// ============================================
+// OAUTH HANDLERS
+// ============================================
+
+async function handleAuthorize(request: Request, env: Env): Promise<Response> {
+  const oauthReqInfo = await (env as any).OAUTH_PROVIDER.parseAuthRequest(request);
+  const nonce = crypto.randomUUID();
+  await env.OAUTH_KV.put(`authreq:${nonce}`, JSON.stringify(oauthReqInfo), { expirationTtl: 600 });
+
+  const githubAuthUrl = new URL("https://github.com/login/oauth/authorize");
+  githubAuthUrl.searchParams.set("client_id", env.GITHUB_CLIENT_ID);
+  githubAuthUrl.searchParams.set("redirect_uri", "https://mcp.sociologic.ai/callback");
+  githubAuthUrl.searchParams.set("state", nonce);
+  githubAuthUrl.searchParams.set("scope", "read:user user:email");
+
+  return Response.redirect(githubAuthUrl.toString(), 302);
+}
+
+async function handleCallback(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const nonce = url.searchParams.get("state");
+
+  if (!code || !nonce) {
+    return new Response("Missing code or state parameter", { status: 400 });
+  }
+
+  const stored = await env.OAUTH_KV.get(`authreq:${nonce}`);
+  if (!stored) {
+    return new Response("Authorization request expired or invalid", { status: 400 });
+  }
+  await env.OAUTH_KV.delete(`authreq:${nonce}`);
+  const oauthReqInfo = JSON.parse(stored);
+
+  // Exchange GitHub code for access token
+  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
+      code,
+    }),
+  });
+
+  const tokenData = await tokenRes.json() as { access_token?: string; error?: string };
+  if (!tokenData.access_token) {
+    return new Response(`GitHub token exchange failed: ${tokenData.error || "unknown"}`, { status: 502 });
+  }
+
+  // Call SocioLogic-core to create/find profile
+  const apiUrl = env.SOCIOLOGIC_API_URL || "https://www.sociologic.ai";
+  const coreRes = await fetch(`${apiUrl}/api/v1/auth/github-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ github_access_token: tokenData.access_token }),
+  });
+
+  const coreData = await coreRes.json() as { api_key?: string; email?: string; error?: any };
+  if (!coreData.api_key) {
+    return new Response(`Profile creation failed: ${JSON.stringify(coreData.error)}`, { status: 502 });
+  }
+
+  const { redirectTo } = await (env as any).OAUTH_PROVIDER.completeAuthorization({
+    request: oauthReqInfo,
+    userId: coreData.email,
+    metadata: {},
+    scope: oauthReqInfo.scope ?? [],
+    props: { apiKey: coreData.api_key },
+    revokeExistingGrants: false,
+  });
+
+  return Response.redirect(redirectTo, 302);
+}
+
+// ============================================
 // SSE TRANSPORT - NOT IMPLEMENTED
 // ============================================
 // SSE transport requires bidirectional communication and stateful connections
@@ -507,10 +635,10 @@ class MCPHandler {
 // See: https://modelcontextprotocol.io/docs/concepts/transports
 
 // ============================================
-// CLOUDFLARE WORKERS HANDLER
+// DEFAULT HANDLER (routing for non-OAuth paths)
 // ============================================
 
-export default {
+const defaultHandler: ExportedHandler<Env> = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
@@ -518,18 +646,24 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
-          "Access-Control-Max-Age": "86400",
-        },
+        headers: CORS_HEADERS,
       });
+    }
+
+    // Route based on path
+    const path = url.pathname;
+
+    // OAuth authorize and callback (handled before MCP routes)
+    if (path === "/authorize") {
+      return handleAuthorize(request, env);
+    }
+    if (path === "/callback") {
+      return handleCallback(request, env);
     }
 
     // Server card for Smithery discovery (no auth required - must be before auth check)
     // Format follows SEP-1649 spec: https://smithery.ai/docs/build/external#server-scanning
-    if (url.pathname === "/.well-known/mcp/server-card.json") {
+    if (path === "/.well-known/mcp/server-card.json") {
       const toolsWithSchema = TOOL_DEFINITIONS.map((t) => ({
         name: t.name,
         description: t.description,
@@ -540,212 +674,205 @@ export default {
         annotations: t.annotations,
       }));
 
-      return new Response(
-        JSON.stringify({
-          serverInfo: {
-            name: "signal-relay-mcp",
-            displayName: "Signal Relay - Revenue Intelligence for AI Agents",
-            version: "1.0.2",
-            icon: "https://www.sociologic.ai/apple-touch-icon.png",
-          },
-          authentication: {
-            required: true,
-            schemes: ["apiKey"],
-            instructions: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
-          },
-          configSchema: {
-            type: "object",
-            properties: {
-              apiKey: {
-                type: "string",
-                title: "API Key",
-                description: "Your SocioLogic API key for authentication. Get one at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
+      return withCors(
+        new Response(
+          JSON.stringify({
+            serverInfo: {
+              name: "signal-relay-mcp",
+              displayName: "Signal Relay - Revenue Intelligence for AI Agents",
+              version: "1.0.2",
+              icon: "https://www.sociologic.ai/apple-touch-icon.png",
+            },
+            authentication: {
+              required: true,
+              schemes: ["apiKey"],
+              instructions: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
+            },
+            configSchema: {
+              type: "object",
+              properties: {
+                apiKey: {
+                  type: "string",
+                  title: "API Key",
+                  description: "Your SocioLogic API key for authentication. Get one at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)",
+                },
               },
+              required: ["apiKey"],
             },
-            required: ["apiKey"],
-          },
-          tools: toolsWithSchema,
-          resources: [
-            {
-              uri: "sociologic://personas/marketplace",
-              name: "Persona Marketplace",
-              description: "Browse available synthetic personas in the SocioLogic marketplace",
-              mimeType: "application/json",
+            tools: toolsWithSchema,
+            resources: [
+              {
+                uri: "sociologic://personas/marketplace",
+                name: "Persona Marketplace",
+                description: "Browse available synthetic personas in the SocioLogic marketplace",
+                mimeType: "application/json",
+              },
+              {
+                uri: "sociologic://campaigns/templates",
+                name: "Campaign Templates",
+                description: "Pre-built research campaign templates for common use cases",
+                mimeType: "application/json",
+              },
+              {
+                uri: "sociologic://account/credits",
+                name: "Credits Balance",
+                description: "Your current SocioLogic credits balance and usage",
+                mimeType: "application/json",
+              },
+            ],
+            prompts: [
+              {
+                name: "run_research_campaign",
+                description: "Run a multi-persona research campaign to gather diverse perspectives",
+                arguments: [
+                  {
+                    name: "research_question",
+                    description: "The main research question you want to answer",
+                    required: true,
+                  },
+                  {
+                    name: "persona_count",
+                    description: "Number of personas to interview (default: 10)",
+                    required: false,
+                  },
+                ],
+              },
+              {
+                name: "competitive_analysis",
+                description: "Get synthetic customer perspectives on competitive products",
+                arguments: [
+                  {
+                    name: "product",
+                    description: "Your product or service name",
+                    required: true,
+                  },
+                  {
+                    name: "competitors",
+                    description: "Comma-separated list of competitor names",
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json",
             },
-            {
-              uri: "sociologic://campaigns/templates",
-              name: "Campaign Templates",
-              description: "Pre-built research campaign templates for common use cases",
-              mimeType: "application/json",
-            },
-            {
-              uri: "sociologic://account/credits",
-              name: "Credits Balance",
-              description: "Your current SocioLogic credits balance and usage",
-              mimeType: "application/json",
-            },
-          ],
-          prompts: [
-            {
-              name: "run_research_campaign",
-              description: "Run a multi-persona research campaign to gather diverse perspectives",
-              arguments: [
-                {
-                  name: "research_question",
-                  description: "The main research question you want to answer",
-                  required: true,
-                },
-                {
-                  name: "persona_count",
-                  description: "Number of personas to interview (default: 10)",
-                  required: false,
-                },
-              ],
-            },
-            {
-              name: "competitive_analysis",
-              description: "Get synthetic customer perspectives on competitive products",
-              arguments: [
-                {
-                  name: "product",
-                  description: "Your product or service name",
-                  required: true,
-                },
-                {
-                  name: "competitors",
-                  description: "Comma-separated list of competitor names",
-                  required: true,
-                },
-              ],
-            },
-          ],
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+          }
+        )
       );
     }
 
     // Early check of Content-Length header if present (optimization)
     const contentLength = request.headers.get("Content-Length");
     if (contentLength && parseInt(contentLength, 10) > MAX_REQUEST_SIZE) {
-      return new Response(
-        JSON.stringify({
-          jsonrpc: "2.0",
-          id: null,
-          error: {
-            code: MCP_ERRORS.INVALID_REQUEST,
-            message: `Request body too large. Maximum size is ${MAX_REQUEST_SIZE} bytes.`,
-          },
-        }),
-        {
-          status: 413,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+      return withCors(
+        new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: null,
+            error: {
+              code: MCP_ERRORS.INVALID_REQUEST,
+              message: `Request body too large. Maximum size is ${MAX_REQUEST_SIZE} bytes.`,
+            },
+          }),
+          {
+            status: 413,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
       );
     }
-
-    // Extract API key from request (headers only - never from query params for security)
-    // Trim whitespace and handle empty strings
-    const apiKey = (
-      request.headers.get("X-API-Key") ||
-      request.headers.get("Authorization")?.replace("Bearer ", "")
-    )?.trim();
-
-    // Only require auth on POST to MCP JSON-RPC endpoints.
-    // Non-MCP paths (e.g. /register, /token, /authorize) must NOT return 401
-    // because the MCP SDK probes those OAuth endpoints during discovery.
-    // Returning 401 on those paths causes "SDK auth failed" errors in clients.
-    const mcpPaths = ["/", "/mcp", "/rpc"];
-    if (!apiKey && request.method === "POST" && mcpPaths.includes(url.pathname)) {
-      return new Response(
-        JSON.stringify({
-          error: "unauthorized",
-          error_description: "API key required. Pass via X-API-Key header or Authorization: Bearer header.",
-        }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      );
-    }
-
-    const apiUrl = env.SOCIOLOGIC_API_URL || "https://www.sociologic.ai";
-    const handler = new MCPHandler(apiUrl, apiKey);
-
-    // Route based on path
-    const path = url.pathname;
 
     // SSE endpoint - not implemented (requires Durable Objects for stateful connections)
     if (path === "/sse" || path === "/mcp/sse") {
-      return new Response(
-        JSON.stringify({
-          error: {
-            code: "NOT_IMPLEMENTED",
-            message: "SSE transport is not available. Use JSON-RPC instead: POST to / or /rpc",
-            documentation: "https://www.sociologic.ai/docs/mcp",
-          },
-        }),
-        {
-          status: 501,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+      return withCors(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "NOT_IMPLEMENTED",
+              message: "SSE transport is not available. Use JSON-RPC instead: POST to / or /rpc",
+              documentation: "https://www.sociologic.ai/docs/mcp",
+            },
+          }),
+          {
+            status: 501,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
       );
     }
 
     // JSON-RPC endpoint for direct calls
     if (path === "/" || path === "/mcp" || path === "/rpc") {
       if (request.method !== "POST") {
-        return new Response(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: MCP_ERRORS.INVALID_REQUEST,
-              message: "POST method required for JSON-RPC",
-            },
-          }),
-          {
-            status: 405,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
-          }
+        return withCors(
+          new Response(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              error: {
+                code: MCP_ERRORS.INVALID_REQUEST,
+                message: "POST method required for JSON-RPC",
+              },
+            }),
+            {
+              status: 405,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
         );
       }
+
+      // Resolve auth for MCP endpoints
+      const auth = await resolveMcpAuth(request, env);
+      if (!auth.ok) {
+        return withCors(
+          new Response(
+            JSON.stringify({
+              error: "unauthorized",
+              error_description: "API key required. Pass via X-API-Key header or Authorization: Bearer header.",
+            }),
+            {
+              status: 401,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+      }
+
+      const apiUrl = env.SOCIOLOGIC_API_URL || "https://www.sociologic.ai";
+      const handler = new MCPHandler(apiUrl, auth.apiKey);
 
       try {
         // Read body as text first to validate size (bypasses Content-Length bypass)
         const bodyText = await request.text();
         if (bodyText.length > MAX_REQUEST_SIZE) {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              id: null,
-              error: {
-                code: MCP_ERRORS.INVALID_REQUEST,
-                message: `Request body too large. Maximum size is ${MAX_REQUEST_SIZE} bytes.`,
-              },
-            }),
-            {
-              status: 413,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
+          return withCors(
+            new Response(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: null,
+                error: {
+                  code: MCP_ERRORS.INVALID_REQUEST,
+                  message: `Request body too large. Maximum size is ${MAX_REQUEST_SIZE} bytes.`,
+                },
+              }),
+              {
+                status: 413,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
           );
         }
 
@@ -754,43 +881,45 @@ export default {
         try {
           body = JSON.parse(bodyText);
         } catch {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              id: null,
-              error: {
-                code: MCP_ERRORS.PARSE_ERROR,
-                message: "Failed to parse JSON body",
-              },
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
+          return withCors(
+            new Response(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: null,
+                error: {
+                  code: MCP_ERRORS.PARSE_ERROR,
+                  message: "Failed to parse JSON body",
+                },
+              }),
+              {
+                status: 400,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
           );
         }
 
         // Validate body is an object (not array, null, or primitive)
         if (typeof body !== "object" || body === null || Array.isArray(body)) {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              id: null,
-              error: {
-                code: MCP_ERRORS.INVALID_REQUEST,
-                message: "Request body must be a JSON object",
-              },
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
+          return withCors(
+            new Response(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: null,
+                error: {
+                  code: MCP_ERRORS.INVALID_REQUEST,
+                  message: "Request body must be a JSON object",
+                },
+              }),
+              {
+                status: 400,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
           );
         }
 
@@ -798,22 +927,23 @@ export default {
 
         // Validate JSON-RPC structure
         if (mcpRequest.jsonrpc !== "2.0" || typeof mcpRequest.method !== "string") {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              id: mcpRequest.id ?? null,
-              error: {
-                code: MCP_ERRORS.INVALID_REQUEST,
-                message: "Invalid JSON-RPC 2.0 request: requires jsonrpc='2.0' and method string",
-              },
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
+          return withCors(
+            new Response(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: mcpRequest.id ?? null,
+                error: {
+                  code: MCP_ERRORS.INVALID_REQUEST,
+                  message: "Invalid JSON-RPC 2.0 request: requires jsonrpc='2.0' and method string",
+                },
+              }),
+              {
+                status: 400,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
           );
         }
 
@@ -824,123 +954,131 @@ export default {
           typeof mcpRequest.id !== "string" &&
           typeof mcpRequest.id !== "number"
         ) {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              id: null,
-              error: {
-                code: MCP_ERRORS.INVALID_REQUEST,
-                message: "Invalid JSON-RPC request: id must be string, number, or null",
-              },
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
+          return withCors(
+            new Response(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: null,
+                error: {
+                  code: MCP_ERRORS.INVALID_REQUEST,
+                  message: "Invalid JSON-RPC request: id must be string, number, or null",
+                },
+              }),
+              {
+                status: 400,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
           );
         }
 
         const response = await handler.handleRequest(mcpRequest);
 
-        return new Response(JSON.stringify(response), {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        });
-      } catch (error) {
-        return new Response(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            id: null,
-            error: {
-              code: MCP_ERRORS.INTERNAL_ERROR,
-              message: "Failed to process request",
-            },
-          }),
-          {
-            status: 500,
+        return withCors(
+          new Response(JSON.stringify(response), {
             headers: {
               "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
             },
-          }
+          })
+        );
+      } catch (error) {
+        return withCors(
+          new Response(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id: null,
+              error: {
+                code: MCP_ERRORS.INTERNAL_ERROR,
+                message: "Failed to process request",
+              },
+            }),
+            {
+              status: 500,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
         );
       }
     }
 
     // Health check endpoint
     if (path === "/health") {
-      return new Response(
-        JSON.stringify({
-          status: "healthy",
-          server: "sociologic-mcp-server",
-          version: "1.0.0",
-          timestamp: new Date().toISOString(),
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+      return withCors(
+        new Response(
+          JSON.stringify({
+            status: "healthy",
+            server: "sociologic-mcp-server",
+            version: "1.0.0",
+            timestamp: new Date().toISOString(),
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
       );
     }
 
     // Info endpoint
     if (path === "/info") {
-      return new Response(
-        JSON.stringify({
-          name: "SocioLogic MCP Server",
-          version: "1.0.0",
-          description: "Remote MCP server for the SocioLogic Revenue Intelligence Platform",
-          endpoints: {
-            "/": "JSON-RPC endpoint (POST)",
-            "/sse": "Not implemented (returns 501)",
-            "/health": "Health check",
-            "/info": "Server information",
-          },
-          tools: TOOL_DEFINITIONS.map((t) => ({
-            name: t.name,
-            description: t.description,
-          })),
-          documentation: "https://www.sociologic.ai/docs",
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      );
-    }
-
-    // OAuth endpoints — return proper OAuth error JSON so the SDK parses cleanly
-    if (["/register", "/authorize", "/token"].includes(url.pathname)) {
-      return new Response(
-        JSON.stringify({
-          error: "invalid_request",
-          error_description: "This server uses API key authentication. Set X-API-Key in your MCP config headers.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+      return withCors(
+        new Response(
+          JSON.stringify({
+            name: "SocioLogic MCP Server",
+            version: "1.0.0",
+            description: "Remote MCP server for the SocioLogic Revenue Intelligence Platform",
+            endpoints: {
+              "/": "JSON-RPC endpoint (POST)",
+              "/sse": "Not implemented (returns 501)",
+              "/health": "Health check",
+              "/info": "Server information",
+            },
+            tools: TOOL_DEFINITIONS.map((t) => ({
+              name: t.name,
+              description: t.description,
+            })),
+            documentation: "https://www.sociologic.ai/docs",
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
       );
     }
 
     // 404 for everything else
-    return new Response("Not Found", {
-      status: 404,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return withCors(
+      new Response("Not Found", {
+        status: 404,
+      })
+    );
   },
 };
+
+// ============================================
+// OAUTH PROVIDER ENTRYPOINT
+// ============================================
+
+export default new OAuthProvider({
+  apiHandlers: {
+    "/oauth-api": {
+      async fetch() {
+        return new Response("Not Found", { status: 404 });
+      },
+    },
+  },
+  defaultHandler,
+  authorizeEndpoint: "/authorize",
+  tokenEndpoint: "/token",
+  resourceMetadata: {
+    resource: "https://mcp.sociologic.ai",
+    authorization_servers: ["https://mcp.sociologic.ai"],
+  },
+});

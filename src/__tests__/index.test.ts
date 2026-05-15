@@ -4,17 +4,60 @@
  * Tests cover:
  * - MCP protocol: initialize, tools/list, tools/call, prompts/list, resources/list
  * - HTTP routing: /, /rpc, /mcp, /health, /info, /sse, /.well-known/mcp/server-card.json
- * - Authentication: X-API-Key header, Bearer token
+ * - Authentication: X-API-Key header, Bearer token (pl_live_ prefix for backward compat)
  * - CORS handling
  * - Error responses: 400, 401, 404, 405, 413
  * - JSON-RPC validation
+ *
+ * The Worker exports an OAuthProvider instance. In tests we mock the
+ * @cloudflare/workers-oauth-provider module so the OAuthProvider constructor
+ * captures the defaultHandler and delegates fetch() directly to it, avoiding
+ * the cloudflare:workers import that fails in Node.js.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import worker from '../index';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock @cloudflare/workers-oauth-provider before importing the worker.
+// The real module imports from cloudflare:workers which is unavailable in Node.
+vi.mock('@cloudflare/workers-oauth-provider', () => {
+  class MockOAuthProvider {
+    private defaultHandler: any;
+
+    constructor(options: any) {
+      this.defaultHandler = options.defaultHandler;
+    }
+
+    async fetch(request: Request, env: any, ctx?: any) {
+      // Inject OAUTH_PROVIDER into env like the real library does
+      const augmentedEnv = {
+        ...env,
+        OAUTH_PROVIDER: {
+          unwrapToken: async (_token: string) => null, // no valid OAuth tokens in tests
+          parseAuthRequest: async () => ({}),
+          completeAuthorization: async () => ({ redirectTo: 'https://example.com' }),
+        },
+      };
+      return this.defaultHandler.fetch(request, augmentedEnv, ctx);
+    }
+  }
+
+  return { default: MockOAuthProvider };
+});
+
+// Import worker AFTER the mock is set up
+const { default: worker } = await import('../index');
 
 const API_BASE = 'https://signal-relay.sociologic.workers.dev';
 const VALID_API_KEY = 'test-api-key-123';
+const VALID_PL_KEY = 'pl_live_test123abc';
+
+// Mock KV namespace (in-memory)
+const mockKV = {
+  get: async () => null,
+  put: async () => {},
+  delete: async () => {},
+  list: async () => ({ keys: [], list_complete: true, cursor: '' }),
+} as unknown as KVNamespace;
 
 // Helper to create mock Request objects
 function createRequest(
@@ -51,9 +94,12 @@ function createJsonRpcRequest(
   };
 }
 
-// Mock env
+// Mock env with required OAuthProvider fields
 const mockEnv = {
   SOCIOLOGIC_API_URL: 'https://www.sociologic.ai',
+  OAUTH_KV: mockKV,
+  GITHUB_CLIENT_ID: 'test-github-client-id',
+  GITHUB_CLIENT_SECRET: 'test-github-client-secret',
 };
 
 describe('Cloudflare Workers Handler', () => {
@@ -122,15 +168,40 @@ describe('Cloudflare Workers Handler', () => {
       expect(response.status).toBe(200);
     });
 
-    it('should accept Authorization Bearer header', async () => {
+    it('should accept Authorization Bearer with pl_live_ prefix (backward compat)', async () => {
       const request = createRequest('/', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${VALID_API_KEY}` },
+        headers: { Authorization: `Bearer ${VALID_PL_KEY}` },
         body: createJsonRpcRequest('ping'),
       });
 
       const response = await worker.fetch(request, mockEnv);
       expect(response.status).toBe(200);
+    });
+
+    it('should accept Authorization Bearer with pl_test_ prefix', async () => {
+      const request = createRequest('/', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer pl_test_abc123xyz' },
+        body: createJsonRpcRequest('ping'),
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+      expect(response.status).toBe(200);
+    });
+
+    it('should reject non-prefixed Bearer token when OAuth unwrap fails', async () => {
+      const request = createRequest('/', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer some-random-token' },
+        body: createJsonRpcRequest('ping'),
+      });
+
+      const response = await worker.fetch(request, mockEnv);
+      expect(response.status).toBe(401);
+
+      const body = await response.json();
+      expect(body.error).toBe('unauthorized');
     });
 
     it('should trim whitespace from API key', async () => {

@@ -108,7 +108,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(response.status).toBe(401);
 
       const body = await response.json();
-      expect(body.error.code).toBe('AUTHENTICATION_REQUIRED');
+      expect(body.error).toBe('unauthorized');
     });
 
     it('should accept X-API-Key header', async () => {

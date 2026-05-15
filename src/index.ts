@@ -661,10 +661,8 @@ export default {
     if (!apiKey) {
       return new Response(
         JSON.stringify({
-          error: {
-            code: "AUTHENTICATION_REQUIRED",
-            message: "API key required. Pass via X-API-Key header or Authorization: Bearer header.",
-          },
+          error: "unauthorized",
+          error_description: "API key required. Pass via X-API-Key header or Authorization: Bearer header.",
         }),
         {
           status: 401,

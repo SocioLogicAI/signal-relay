@@ -14,7 +14,7 @@ export const mockPersona = {
   tagline: 'Enterprise SaaS buyer',
   description: 'A seasoned enterprise buyer with 15 years of experience',
   visibility: 'public' as const,
-  fidelity_tier: 'enhanced' as const,
+  fidelity_tier: 'ultra' as const,
   demographics: {
     age: 42,
     location: 'San Francisco, CA',
@@ -66,24 +66,6 @@ export const mockCreditsResponse = {
   },
   meta: {
     request_id: 'req_123',
-  },
-};
-
-export const mockInterviewResponse = {
-  data: {
-    response: "That's an interesting question. From my perspective as an enterprise buyer...",
-    conversation_id: '423e4567-e89b-12d3-a456-426614174000',
-    persona: {
-      id: mockPersona.id,
-      slug: mockPersona.slug,
-      name: mockPersona.name,
-    },
-    memory_context_used: true,
-  },
-  meta: {
-    request_id: 'req_456',
-    credits_used: 5,
-    credits_remaining: 95,
   },
 };
 
@@ -168,32 +150,11 @@ export const handlers = [
       );
     }
 
-    const body = await request.json() as { description: string; fidelity_tier?: string };
+    const body = await request.json() as { description: string };
     return HttpResponse.json({
       data: { ...mockPersona, description: body.description },
       meta: { request_id: 'req_create', credits_used: 10 },
     });
-  }),
-
-  // Interview persona
-  http.post(`${API_BASE}/api/v1/personas/:slug/interview`, async ({ params, request }) => {
-    const apiKey = request.headers.get('X-API-Key');
-    if (!apiKey) {
-      return HttpResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'API key required' } },
-        { status: 401 }
-      );
-    }
-
-    const { slug } = params;
-    if (slug === 'not-found') {
-      return HttpResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'Persona not found' } },
-        { status: 404 }
-      );
-    }
-
-    return HttpResponse.json(mockInterviewResponse);
   }),
 
   // Get persona memories

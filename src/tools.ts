@@ -29,7 +29,7 @@ export const GetPersonaSchema = z.object({
 });
 
 export const CreatePersonaSchema = z.object({
-  description: z.string().min(10).max(2000)
+  description: z.string().min(10).max(500)
     .describe("Natural language description of the persona to create"),
   include_avatar: z.boolean().optional().default(false)
     .describe("Whether to generate a profile picture. Defaults to false. Adds 0.75 credits to the cost."),

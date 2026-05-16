@@ -1077,6 +1077,7 @@ export default new OAuthProvider({
   defaultHandler,
   authorizeEndpoint: "/authorize",
   tokenEndpoint: "/token",
+  clientRegistrationEndpoint: "/register",
   resourceMetadata: {
     resource: "https://mcp.sociologic.ai",
     authorization_servers: ["https://mcp.sociologic.ai"],

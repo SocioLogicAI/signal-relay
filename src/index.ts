@@ -42,6 +42,8 @@ import {
   RngWeightedSchema,
 } from "./tools";
 
+const VERSION = "2.0.0";
+
 // ============================================
 // VALIDATION HELPER
 // ============================================
@@ -194,7 +196,7 @@ class MCPHandler {
         },
         serverInfo: {
           name: "sociologic-mcp-server",
-          version: "1.0.2",
+          version: VERSION,
           description: "SocioLogic Revenue Intelligence Platform - High-fidelity synthetic personas for market research",
         },
       },
@@ -214,6 +216,7 @@ class MCPHandler {
         description: tool.description,
         inputSchema: jsonSchema,
         annotations: tool.annotations,
+        ...((tool as any)._meta ? { _meta: (tool as any)._meta } : {}),
       };
     });
 
@@ -654,6 +657,7 @@ const defaultHandler: ExportedHandler<Env> = {
           $refStrategy: "none",
         }),
         annotations: t.annotations,
+        ...((t as any)._meta ? { _meta: (t as any)._meta } : {}),
       }));
 
       return withCors(
@@ -662,7 +666,7 @@ const defaultHandler: ExportedHandler<Env> = {
             serverInfo: {
               name: "signal-relay-mcp",
               displayName: "Signal Relay - Revenue Intelligence for AI Agents",
-              version: "1.0.2",
+              version: VERSION,
               icon: "https://www.sociologic.ai/apple-touch-icon.png",
             },
             authentication: {
@@ -994,7 +998,7 @@ const defaultHandler: ExportedHandler<Env> = {
           JSON.stringify({
             status: "healthy",
             server: "sociologic-mcp-server",
-            version: "1.0.0",
+            version: VERSION,
             timestamp: new Date().toISOString(),
           }),
           {
@@ -1012,7 +1016,7 @@ const defaultHandler: ExportedHandler<Env> = {
         new Response(
           JSON.stringify({
             name: "SocioLogic MCP Server",
-            version: "1.0.0",
+            version: VERSION,
             description: "Remote MCP server for the SocioLogic Revenue Intelligence Platform",
             endpoints: {
               "/": "JSON-RPC endpoint (POST)",

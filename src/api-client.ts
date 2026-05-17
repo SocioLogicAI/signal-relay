@@ -139,7 +139,7 @@ export class SocioLogicClient {
         network: x402Payment.network || "eip155:8453",
         payload: x402Payment.payload,
       };
-      headers["X-Payment"] = Buffer.from(JSON.stringify(paymentHeader)).toString("base64");
+      headers["X-Payment"] = btoa(JSON.stringify(paymentHeader));
     }
 
     // Setup timeout with AbortController

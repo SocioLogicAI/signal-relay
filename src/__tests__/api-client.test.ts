@@ -218,8 +218,8 @@ describe('SocioLogicClient', () => {
         const result = await client.exportCampaign('223e4567-e89b-12d3-a456-426614174000', 'pdf');
 
         expect(result.data).toBeDefined();
-        expect(result.data?.export_url).toBeDefined();
-        expect(result.data?.format).toBe('pdf');
+        expect((result.data as { export_url: string }).export_url).toBeDefined();
+        expect((result.data as { format: string }).format).toBe('pdf');
       });
 
       it('should return JSON export data', async () => {

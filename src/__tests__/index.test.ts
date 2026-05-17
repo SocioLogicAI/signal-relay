@@ -102,11 +102,17 @@ const mockEnv = {
   GITHUB_CLIENT_SECRET: 'test-github-client-secret',
 };
 
+// Mock ExecutionContext for worker.fetch (3rd argument)
+const mockCtx = {
+  waitUntil: () => {},
+  passThroughOnException: () => {},
+} as unknown as ExecutionContext;
+
 describe('Cloudflare Workers Handler', () => {
   describe('CORS Preflight', () => {
     it('should handle OPTIONS request', async () => {
       const request = createRequest('/', { method: 'OPTIONS' });
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
 
       expect(response.status).toBe(204);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
@@ -117,12 +123,12 @@ describe('Cloudflare Workers Handler', () => {
   describe('Server Card (/.well-known/mcp/server-card.json)', () => {
     it('should return server card without authentication', async () => {
       const request = createRequest('/.well-known/mcp/server-card.json');
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
 
       expect(response.status).toBe(200);
       expect(response.headers.get('Content-Type')).toBe('application/json');
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.serverInfo).toBeDefined();
       expect(body.serverInfo.name).toBe('signal-relay-mcp');
       expect(body.tools).toBeDefined();
@@ -133,8 +139,8 @@ describe('Cloudflare Workers Handler', () => {
 
     it('should include all tools with schemas', async () => {
       const request = createRequest('/.well-known/mcp/server-card.json');
-      const response = await worker.fetch(request, mockEnv);
-      const body = await response.json();
+      const response = await worker.fetch(request, mockEnv, mockCtx);
+      const body: any = await response.json();
 
       body.tools.forEach((tool: { name: string; inputSchema: unknown }) => {
         expect(tool.name).toMatch(/^sociologic_/);
@@ -150,10 +156,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(401);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBe('unauthorized');
     });
 
@@ -164,7 +170,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -175,7 +181,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -186,7 +192,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -197,10 +203,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(401);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBe('unauthorized');
     });
 
@@ -211,7 +217,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -222,7 +228,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(401);
     });
   });
@@ -235,7 +241,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -246,7 +252,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -257,7 +263,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
     });
 
@@ -267,7 +273,7 @@ describe('Cloudflare Workers Handler', () => {
         headers: { 'X-API-Key': VALID_API_KEY },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(405);
     });
 
@@ -277,10 +283,10 @@ describe('Cloudflare Workers Handler', () => {
         headers: { 'X-API-Key': VALID_API_KEY },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(501);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error.code).toBe('NOT_IMPLEMENTED');
     });
 
@@ -290,10 +296,10 @@ describe('Cloudflare Workers Handler', () => {
         headers: { 'X-API-Key': VALID_API_KEY },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.status).toBe('healthy');
     });
 
@@ -303,10 +309,10 @@ describe('Cloudflare Workers Handler', () => {
         headers: { 'X-API-Key': VALID_API_KEY },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.name).toBe('SocioLogic MCP Server');
       expect(body.tools).toBeDefined();
     });
@@ -317,7 +323,7 @@ describe('Cloudflare Workers Handler', () => {
         headers: { 'X-API-Key': VALID_API_KEY },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(404);
 
       const body = await response.text();
@@ -336,7 +342,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(413);
     });
   });
@@ -352,10 +358,10 @@ describe('Cloudflare Workers Handler', () => {
         body: 'invalid json',
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error.code).toBe(-32700); // PARSE_ERROR
     });
 
@@ -366,10 +372,10 @@ describe('Cloudflare Workers Handler', () => {
         body: [1, 2, 3], // Array instead of object
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error.code).toBe(-32600); // INVALID_REQUEST
     });
 
@@ -380,10 +386,10 @@ describe('Cloudflare Workers Handler', () => {
         body: { id: 1, method: 'ping' },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error.code).toBe(-32600);
     });
 
@@ -394,7 +400,7 @@ describe('Cloudflare Workers Handler', () => {
         body: { jsonrpc: '1.0', id: 1, method: 'ping' },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
     });
 
@@ -405,7 +411,7 @@ describe('Cloudflare Workers Handler', () => {
         body: { jsonrpc: '2.0', id: 1 },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
     });
 
@@ -416,7 +422,7 @@ describe('Cloudflare Workers Handler', () => {
         body: { jsonrpc: '2.0', id: { invalid: true }, method: 'ping' },
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(400);
     });
 
@@ -427,10 +433,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping', undefined, 'string-id'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.id).toBe('string-id');
     });
 
@@ -441,10 +447,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping', undefined, 42),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.id).toBe(42);
     });
   });
@@ -457,10 +463,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.jsonrpc).toBe('2.0');
       expect(body.result.pong).toBe(true);
     });
@@ -474,10 +480,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('initialize'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.protocolVersion).toBe('2024-11-05');
       expect(body.result.capabilities).toBeDefined();
       expect(body.result.serverInfo.name).toBe('sociologic-mcp-server');
@@ -490,10 +496,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('initialize'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBeDefined();
       expect(body.error.code).toBe(-32600); // INVALID_REQUEST
     });
@@ -507,10 +513,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('tools/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.tools).toHaveLength(24);
     });
 
@@ -521,8 +527,8 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('tools/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
-      const body = await response.json();
+      const response = await worker.fetch(request, mockEnv, mockCtx);
+      const body: any = await response.json();
 
       body.result.tools.forEach((tool: { name: string; inputSchema: { type: string } }) => {
         expect(tool.inputSchema).toBeDefined();
@@ -542,10 +548,10 @@ describe('Cloudflare Workers Handler', () => {
         }),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.content).toBeDefined();
       expect(body.result.content[0].type).toBe('text');
     });
@@ -560,10 +566,10 @@ describe('Cloudflare Workers Handler', () => {
         }),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.content).toBeDefined();
     });
 
@@ -577,10 +583,10 @@ describe('Cloudflare Workers Handler', () => {
         }),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.content).toBeDefined();
     });
 
@@ -594,10 +600,10 @@ describe('Cloudflare Workers Handler', () => {
         }),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBeDefined();
       expect(body.error.code).toBe(-32603); // INTERNAL_ERROR
     });
@@ -612,10 +618,10 @@ describe('Cloudflare Workers Handler', () => {
         }),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBeDefined();
     });
   });
@@ -628,10 +634,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('prompts/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.prompts).toBeDefined();
       expect(body.result.prompts.length).toBeGreaterThan(0);
     });
@@ -643,8 +649,8 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('prompts/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
-      const body = await response.json();
+      const response = await worker.fetch(request, mockEnv, mockCtx);
+      const body: any = await response.json();
 
       const researchPrompt = body.result.prompts.find(
         (p: { name: string }) => p.name === 'run_research_campaign'
@@ -662,10 +668,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('resources/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.result.resources).toBeDefined();
       expect(body.result.resources.length).toBeGreaterThan(0);
     });
@@ -677,8 +683,8 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('resources/list'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
-      const body = await response.json();
+      const response = await worker.fetch(request, mockEnv, mockCtx);
+      const body: any = await response.json();
 
       body.result.resources.forEach((resource: { uri: string; name: string; description: string }) => {
         expect(resource.uri).toMatch(/^sociologic:\/\//);
@@ -696,10 +702,10 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('unknown/method'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.status).toBe(200);
 
-      const body = await response.json();
+      const body: any = await response.json();
       expect(body.error).toBeDefined();
       expect(body.error.code).toBe(-32601); // METHOD_NOT_FOUND
     });
@@ -713,7 +719,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
     });
 
@@ -723,7 +729,7 @@ describe('Cloudflare Workers Handler', () => {
         body: createJsonRpcRequest('ping'),
       });
 
-      const response = await worker.fetch(request, mockEnv);
+      const response = await worker.fetch(request, mockEnv, mockCtx);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
     });
   });

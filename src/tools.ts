@@ -162,9 +162,6 @@ export const GetX402DiscoverySchema = z.object({});
 
 // ============================================
 // WEB RESEARCH SCHEMAS (Firecrawl via x402)
-// Only search and research_topic remain;
-// scrape_url and get_company_info were removed
-// because Firecrawl only supports x402 on /v1/x402/search
 // ============================================
 
 /**

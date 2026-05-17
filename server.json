@@ -35,14 +35,14 @@
       "runtime": "node",
       "transport": {
         "type": "streamable-http",
-        "url": "https://mcp.sociologicai.com"
+        "url": "https://mcp.sociologic.ai"
       }
     }
   ],
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.sociologicai.com",
+      "url": "https://mcp.sociologic.ai",
       "headers": [
         {
           "name": "X-API-Key",

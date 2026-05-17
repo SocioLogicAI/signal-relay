@@ -46,7 +46,7 @@ configSchema:
 # Server configuration
 server:
   transport: http
-  url: https://mcp.sociologicai.com
+  url: https://mcp.sociologic.ai
 
 # Authentication
 auth:

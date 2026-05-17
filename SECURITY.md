@@ -33,7 +33,7 @@ Instead, please send an email to **security@sociologic.ai** with:
 This security policy applies to:
 
 - The Signal Relay MCP server code in this repository
-- The hosted service at `mcp.sociologicai.com`
+- The hosted service at `mcp.sociologic.ai`
 
 Out of scope:
 

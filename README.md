@@ -17,7 +17,7 @@ A remote MCP (Model Context Protocol) server that connects AI agents to [SocioLo
 
 ### Use the Hosted Server (Recommended)
 
-The fastest way to get started is using our hosted server at `https://mcp.sociologicai.com`.
+The fastest way to get started is using our hosted server at `https://mcp.sociologic.ai`.
 
 1. **Get an API key** at [sociologic.ai/dashboard/api-keys](https://sociologic.ai/dashboard/api-keys) (100 free credits on signup)
 
@@ -29,7 +29,7 @@ The fastest way to get started is using our hosted server at `https://mcp.sociol
   "mcpServers": {
     "sociologic": {
       "transport": "http",
-      "url": "https://mcp.sociologicai.com",
+      "url": "https://mcp.sociologic.ai",
       "headers": {
         "X-API-Key": "YOUR_API_KEY"
       }
@@ -44,7 +44,7 @@ The fastest way to get started is using our hosted server at `https://mcp.sociol
   "mcpServers": {
     "sociologic": {
       "transport": "http",
-      "url": "https://mcp.sociologicai.com",
+      "url": "https://mcp.sociologic.ai",
       "headers": {
         "X-API-Key": "YOUR_API_KEY"
       }
@@ -128,7 +128,7 @@ Starts a local server at `http://localhost:8787`.
 ### Interview a Persona
 
 ```bash
-curl -X POST https://mcp.sociologicai.com/ \
+curl -X POST https://mcp.sociologic.ai/ \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{
@@ -148,7 +148,7 @@ curl -X POST https://mcp.sociologicai.com/ \
 ### List Available Personas
 
 ```bash
-curl -X POST https://mcp.sociologicai.com/ \
+curl -X POST https://mcp.sociologic.ai/ \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{

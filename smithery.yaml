@@ -9,7 +9,7 @@ description: |
   and export board-ready reports—all through natural conversation.
 
   Features:
-  - 15 MCP tools for personas, campaigns, focus groups, and credits
+  - 24 MCP tools for personas, campaigns, focus groups, web research, RNG, and payments
   - High-fidelity synthetic personas with consistent behavior
   - Semantic memory retrieval (RAG) for persona continuity
   - Edge-deployed on Cloudflare Workers (300+ locations, <50ms latency)
@@ -23,14 +23,13 @@ description: |
 author: SocioLogic
 authorUrl: https://www.sociologic.ai
 repository: https://github.com/SocioLogicAI/signal-relay
-homepage: https://www.sociologic.ai/signal-relay
+homepage: https://sociologic.ai/signal-relay
 documentation: https://www.sociologic.ai/docs
 icon: https://www.sociologic.ai/apple-touch-icon.png
 
 license: MIT
-version: 1.0.2
+version: 2.0.0
 
-# Configuration schema for Smithery
 configSchema:
   type: object
   properties:
@@ -43,18 +42,15 @@ configSchema:
   required:
     - apiKey
 
-# Server configuration
 server:
   transport: http
   url: https://mcp.sociologic.ai
 
-# Authentication
 auth:
   type: header
   header: X-API-Key
   description: "Get your API key at https://sociologic.ai/dashboard/api-keys (100 free credits on signup)"
 
-# Categories for discovery
 categories:
   - market-research
   - personas
@@ -62,7 +58,6 @@ categories:
   - sales
   - product-management
 
-# Tags for search
 tags:
   - personas
   - synthetic-users
@@ -72,59 +67,83 @@ tags:
   - interviews
   - campaigns
   - focus-groups
+  - rng
+  - x402
 
-# Tool summary (full definitions in the server)
 tools:
   - name: sociologic_list_personas
-    description: List synthetic personas from marketplace or private collection
+    description: [Research/Personas] List available synthetic personas from the SocioLogic marketplace or your private collection. Use this to discover personas for interviews or campaigns.
 
   - name: sociologic_get_persona
-    description: Get detailed persona information (demographics, psychographics, traits)
+    description: [Research/Personas] Get detailed information about a specific persona including demographics, psychographics, and behavioral traits.
 
   - name: sociologic_create_persona
-    description: Generate a new persona from natural language description
-
-  - name: sociologic_interview_persona
-    description: Conduct adversarial interview with a persona
+    description: [Research/Personas] Create a new AI persona from a natural language description. Returns rich persona data including demographics, psychographics, communication style, and behavioral traits. Use the returned data to role-play as this persona in conversation, or pass it to a subagent for user research interviews.
 
   - name: sociologic_get_persona_memories
-    description: Retrieve persona's semantic memories via vector search
+    description: [Research/Personas] Retrieve a persona's semantic memories. Memories are vector-embedded learnings from past interactions that inform future responses.
 
   - name: sociologic_list_campaigns
-    description: List research campaigns with status and results
+    description: [Research/Campaigns] List your research campaigns. Campaigns are structured multi-persona interview sessions with defined questions.
 
   - name: sociologic_get_campaign
-    description: Get campaign details including interviews and findings
+    description: [Research/Campaigns] Get detailed information about a specific campaign including status, personas, questions, and interview results.
 
   - name: sociologic_create_campaign
-    description: Create multi-persona research campaign with custom questions
+    description: [Research/Campaigns] Create a new research campaign. Define questions and either generate new personas or use existing ones. Campaigns enable systematic multi-persona research.
 
   - name: sociologic_execute_campaign
-    description: Execute draft campaign (async background processing)
+    description: [Research/Campaigns] Execute a draft campaign. This triggers background interviews with all personas and generates a research report. Long-running operation.
 
   - name: sociologic_export_campaign
-    description: Export campaign results as PDF or JSON
+    description: [Research/Campaigns] Export a completed campaign's results as PDF or JSON. PDF includes executive summary, persona responses, and synthesized findings.
 
   - name: sociologic_list_focus_groups
-    description: List focus groups for cohort-based research
+    description: [Research/Focus Groups] List your focus groups. Focus groups are collections of personas for cohort-based research.
 
   - name: sociologic_get_focus_group
-    description: Get focus group details with member personas
+    description: [Research/Focus Groups] Get detailed information about a focus group including its member personas.
 
   - name: sociologic_create_focus_group
-    description: Create new focus group to organize personas
+    description: [Research/Focus Groups] Create a new focus group to organize personas for cohort-based research.
 
   - name: sociologic_add_personas_to_focus_group
-    description: Add personas to an existing focus group
+    description: [Research/Focus Groups] Add one or more personas to an existing focus group.
 
   - name: sociologic_get_credits_balance
-    description: Check current credits balance and usage
+    description: [Payments] Check your current credits balance. Credits are used for persona interviews and campaign execution.
 
-# Example prompts for users
+  - name: sociologic_get_x402_discovery
+    description: [Payments] Get x402 payment discovery information. Returns which endpoints accept crypto payments (USDC on Base), wallet address, pricing, and facilitator details.
+
+  - name: sociologic_search_web
+    description: [Search & Scraping] Search the web and return scraped results. Returns markdown content from matching pages.
+
+  - name: sociologic_research_topic
+    description: [Search & Scraping] Search a topic and aggregate content from multiple web sources. Returns summarized results useful for building research context.
+
+  - name: sociologic_rng_uuid
+    description: [Utilities] Generate a cryptographically random UUID v4. Useful for creating unique identifiers for experiments, sessions, or tracking.
+
+  - name: sociologic_rng_random
+    description: [Utilities] Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness. Returns a float. Use sociologic_rng_int for integers in a specific range.
+
+  - name: sociologic_rng_int
+    description: [Utilities] Generate a cryptographically random integer within a range. Default range is 0-100. Uses hardware entropy for true randomness.
+
+  - name: sociologic_rng_dice
+    description: [Utilities] Roll a cryptographically random die with a configurable number of sides. Default is a 6-sided die. Uses hardware entropy for true randomness.
+
+  - name: sociologic_rng_coin
+    description: [Utilities] Flip a cryptographically random coin. Returns heads or tails. Uses hardware entropy for true randomness.
+
+  - name: sociologic_rng_shuffle
+    description: [Utilities] Randomly shuffle an array of items using the Fisher-Yates algorithm with cryptographic randomness. Useful for randomizing survey question order, A/B test assignments, or persona selection.
+
+  - name: sociologic_rng_weighted
+    description: [Utilities] Select a random item from an array using weighted probabilities with cryptographic randomness. Useful for simulating demographic distributions, market share splits, or probability-based scenarios.
+
 examples:
-  - prompt: "Interview the 'enterprise-buyer' persona about our pricing page friction"
-    description: Get realistic objections from a skeptical enterprise buyer
-
   - prompt: "Create a persona for a mid-market SaaS CFO who is cost-conscious"
     description: Generate a new synthetic persona from a description
 
@@ -134,9 +153,7 @@ examples:
   - prompt: "Export the competitive audit campaign as a PDF"
     description: Get board-ready reports from completed research
 
-# Pricing info
 pricing:
   model: usage-based
   free_tier: "100 credits on signup"
-  cost_per_interview: "$1"
   details_url: https://sociologic.ai/pricing

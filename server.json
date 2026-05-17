@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.SocioLogicAI/signal-relay",
   "description": "Connect AI agents to SocioLogic's synthetic persona platform for market research.",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "author": {
     "name": "SocioLogic",
     "url": "https://sociologic.ai"
@@ -25,13 +25,15 @@
     "market-research",
     "interviews",
     "campaigns",
-    "focus-groups"
+    "focus-groups",
+    "rng",
+    "x402"
   ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "signal-relay-mcp",
-      "version": "1.0.2",
+      "version": "2.0.0",
       "runtime": "node",
       "transport": {
         "type": "streamable-http",
@@ -56,63 +58,99 @@
   "tools": [
     {
       "name": "sociologic_list_personas",
-      "description": "List synthetic personas from marketplace or private collection"
+      "description": "[Research/Personas] List available synthetic personas from the SocioLogic marketplace or your private collection. Use this to discover personas for interviews or campaigns."
     },
     {
       "name": "sociologic_get_persona",
-      "description": "Get detailed persona information (demographics, psychographics, traits)"
+      "description": "[Research/Personas] Get detailed information about a specific persona including demographics, psychographics, and behavioral traits."
     },
     {
       "name": "sociologic_create_persona",
-      "description": "Generate a new persona from natural language description"
-    },
-    {
-      "name": "sociologic_interview_persona",
-      "description": "Conduct adversarial interview with a persona"
+      "description": "[Research/Personas] Create a new AI persona from a natural language description. Returns rich persona data including demographics, psychographics, communication style, and behavioral traits. Use the returned data to role-play as this persona in conversation, or pass it to a subagent for user research interviews."
     },
     {
       "name": "sociologic_get_persona_memories",
-      "description": "Retrieve persona's semantic memories via vector search"
+      "description": "[Research/Personas] Retrieve a persona's semantic memories. Memories are vector-embedded learnings from past interactions that inform future responses."
     },
     {
       "name": "sociologic_list_campaigns",
-      "description": "List research campaigns with status and results"
+      "description": "[Research/Campaigns] List your research campaigns. Campaigns are structured multi-persona interview sessions with defined questions."
     },
     {
       "name": "sociologic_get_campaign",
-      "description": "Get campaign details including interviews and findings"
+      "description": "[Research/Campaigns] Get detailed information about a specific campaign including status, personas, questions, and interview results."
     },
     {
       "name": "sociologic_create_campaign",
-      "description": "Create multi-persona research campaign with custom questions"
+      "description": "[Research/Campaigns] Create a new research campaign. Define questions and either generate new personas or use existing ones. Campaigns enable systematic multi-persona research."
     },
     {
       "name": "sociologic_execute_campaign",
-      "description": "Execute draft campaign (async background processing)"
+      "description": "[Research/Campaigns] Execute a draft campaign. This triggers background interviews with all personas and generates a research report. Long-running operation."
     },
     {
       "name": "sociologic_export_campaign",
-      "description": "Export campaign results as PDF or JSON"
+      "description": "[Research/Campaigns] Export a completed campaign's results as PDF or JSON. PDF includes executive summary, persona responses, and synthesized findings."
     },
     {
       "name": "sociologic_list_focus_groups",
-      "description": "List focus groups for cohort-based research"
+      "description": "[Research/Focus Groups] List your focus groups. Focus groups are collections of personas for cohort-based research."
     },
     {
       "name": "sociologic_get_focus_group",
-      "description": "Get focus group details with member personas"
+      "description": "[Research/Focus Groups] Get detailed information about a focus group including its member personas."
     },
     {
       "name": "sociologic_create_focus_group",
-      "description": "Create new focus group to organize personas"
+      "description": "[Research/Focus Groups] Create a new focus group to organize personas for cohort-based research."
     },
     {
       "name": "sociologic_add_personas_to_focus_group",
-      "description": "Add personas to an existing focus group"
+      "description": "[Research/Focus Groups] Add one or more personas to an existing focus group."
     },
     {
       "name": "sociologic_get_credits_balance",
-      "description": "Check current credits balance and usage"
+      "description": "[Payments] Check your current credits balance. Credits are used for persona interviews and campaign execution."
+    },
+    {
+      "name": "sociologic_get_x402_discovery",
+      "description": "[Payments] Get x402 payment discovery information. Returns which endpoints accept crypto payments (USDC on Base), wallet address, pricing, and facilitator details."
+    },
+    {
+      "name": "sociologic_search_web",
+      "description": "[Search & Scraping] Search the web and return scraped results. Returns markdown content from matching pages."
+    },
+    {
+      "name": "sociologic_research_topic",
+      "description": "[Search & Scraping] Search a topic and aggregate content from multiple web sources. Returns summarized results useful for building research context."
+    },
+    {
+      "name": "sociologic_rng_uuid",
+      "description": "[Utilities] Generate a cryptographically random UUID v4. Useful for creating unique identifiers for experiments, sessions, or tracking."
+    },
+    {
+      "name": "sociologic_rng_random",
+      "description": "[Utilities] Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness. Returns a float. Use sociologic_rng_int for integers in a specific range."
+    },
+    {
+      "name": "sociologic_rng_int",
+      "description": "[Utilities] Generate a cryptographically random integer within a range. Default range is 0-100. Uses hardware entropy for true randomness."
+    },
+    {
+      "name": "sociologic_rng_dice",
+      "description": "[Utilities] Roll a cryptographically random die with a configurable number of sides. Default is a 6-sided die. Uses hardware entropy for true randomness."
+    },
+    {
+      "name": "sociologic_rng_coin",
+      "description": "[Utilities] Flip a cryptographically random coin. Returns heads or tails. Uses hardware entropy for true randomness."
+    },
+    {
+      "name": "sociologic_rng_shuffle",
+      "description": "[Utilities] Randomly shuffle an array of items using the Fisher-Yates algorithm with cryptographic randomness. Useful for randomizing survey question order, A/B test assignments, or persona selection."
+    },
+    {
+      "name": "sociologic_rng_weighted",
+      "description": "[Utilities] Select a random item from an array using weighted probabilities with cryptographic randomness. Useful for simulating demographic distributions, market share splits, or probability-based scenarios."
     }
   ]
 }

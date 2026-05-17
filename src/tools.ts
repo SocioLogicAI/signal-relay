@@ -228,7 +228,7 @@ export const RngWeightedSchema = z.object({
 export const TOOL_DEFINITIONS = [
   {
     name: "sociologic_list_personas",
-    description: "List available synthetic personas from the SocioLogic marketplace or your private collection. Use this to discover personas for interviews or campaigns.",
+    description: "[Research/Personas] List available synthetic personas from the SocioLogic marketplace or your private collection. Use this to discover personas for interviews or campaigns.",
     inputSchema: ListPersonasSchema,
     annotations: {
       title: "List Personas",
@@ -237,10 +237,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "personas",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_get_persona",
-    description: "Get detailed information about a specific persona including demographics, psychographics, and behavioral traits.",
+    description: "[Research/Personas] Get detailed information about a specific persona including demographics, psychographics, and behavioral traits.",
     inputSchema: GetPersonaSchema,
     annotations: {
       title: "Get Persona Details",
@@ -249,10 +259,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "personas",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_create_persona",
-    description: "Create a new AI persona from a natural language description. Returns rich persona data including demographics, psychographics, communication style, and behavioral traits. Use the returned data to role-play as this persona in conversation, or pass it to a subagent for user research interviews.",
+    description: "[Research/Personas] Create a new AI persona from a natural language description. Returns rich persona data including demographics, psychographics, communication style, and behavioral traits. Use the returned data to role-play as this persona in conversation, or pass it to a subagent for user research interviews.",
     inputSchema: CreatePersonaWithPaymentSchema,
     annotations: {
       title: "Create Persona",
@@ -261,10 +281,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "personas",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "credits" as const, min: 5, max: 50, unit: "credits" as const, variable: true },
+      },
+    },
   },
   {
     name: "sociologic_get_persona_memories",
-    description: "Retrieve a persona's semantic memories. Memories are vector-embedded learnings from past interactions that inform future responses.",
+    description: "[Research/Personas] Retrieve a persona's semantic memories. Memories are vector-embedded learnings from past interactions that inform future responses.",
     inputSchema: GetPersonaMemoriesSchema,
     annotations: {
       title: "Get Persona Memories",
@@ -273,10 +303,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "personas",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_list_campaigns",
-    description: "List your research campaigns. Campaigns are structured multi-persona interview sessions with defined questions.",
+    description: "[Research/Campaigns] List your research campaigns. Campaigns are structured multi-persona interview sessions with defined questions.",
     inputSchema: ListCampaignsSchema,
     annotations: {
       title: "List Campaigns",
@@ -285,10 +325,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "campaigns",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_get_campaign",
-    description: "Get detailed information about a specific campaign including status, personas, questions, and interview results.",
+    description: "[Research/Campaigns] Get detailed information about a specific campaign including status, personas, questions, and interview results.",
     inputSchema: GetCampaignSchema,
     annotations: {
       title: "Get Campaign Details",
@@ -297,10 +347,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "campaigns",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_create_campaign",
-    description: "Create a new research campaign. Define questions and either generate new personas or use existing ones. Campaigns enable systematic multi-persona research.",
+    description: "[Research/Campaigns] Create a new research campaign. Define questions and either generate new personas or use existing ones. Campaigns enable systematic multi-persona research.",
     inputSchema: CreateCampaignSchema,
     annotations: {
       title: "Create Campaign",
@@ -309,10 +369,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "campaigns",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "credits" as const, min: 1, max: 1, unit: "credits" as const },
+      },
+    },
   },
   {
     name: "sociologic_execute_campaign",
-    description: "Execute a draft campaign. This triggers background interviews with all personas and generates a research report. Long-running operation.",
+    description: "[Research/Campaigns] Execute a draft campaign. This triggers background interviews with all personas and generates a research report. Long-running operation.",
     inputSchema: ExecuteCampaignSchema,
     annotations: {
       title: "Execute Campaign",
@@ -321,10 +391,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "campaigns",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "credits" as const, min: 1, unit: "credits" as const, variable: true },
+      },
+    },
   },
   {
     name: "sociologic_export_campaign",
-    description: "Export a completed campaign's results as PDF or JSON. PDF includes executive summary, persona responses, and synthesized findings.",
+    description: "[Research/Campaigns] Export a completed campaign's results as PDF or JSON. PDF includes executive summary, persona responses, and synthesized findings.",
     inputSchema: ExportCampaignSchema,
     annotations: {
       title: "Export Campaign",
@@ -333,10 +413,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "campaigns",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_list_focus_groups",
-    description: "List your focus groups. Focus groups are collections of personas for cohort-based research.",
+    description: "[Research/Focus Groups] List your focus groups. Focus groups are collections of personas for cohort-based research.",
     inputSchema: ListFocusGroupsSchema,
     annotations: {
       title: "List Focus Groups",
@@ -345,10 +435,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "focus_groups",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_get_focus_group",
-    description: "Get detailed information about a focus group including its member personas.",
+    description: "[Research/Focus Groups] Get detailed information about a focus group including its member personas.",
     inputSchema: GetFocusGroupSchema,
     annotations: {
       title: "Get Focus Group Details",
@@ -357,10 +457,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "focus_groups",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_create_focus_group",
-    description: "Create a new focus group to organize personas for cohort-based research.",
+    description: "[Research/Focus Groups] Create a new focus group to organize personas for cohort-based research.",
     inputSchema: CreateFocusGroupSchema,
     annotations: {
       title: "Create Focus Group",
@@ -369,10 +479,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "focus_groups",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_add_personas_to_focus_group",
-    description: "Add one or more personas to an existing focus group.",
+    description: "[Research/Focus Groups] Add one or more personas to an existing focus group.",
     inputSchema: AddPersonasToFocusGroupSchema,
     annotations: {
       title: "Add Personas to Focus Group",
@@ -381,10 +501,20 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "research",
+        subcategory: "focus_groups",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_get_credits_balance",
-    description: "Check your current credits balance. Credits are used for persona interviews and campaign execution.",
+    description: "[Payments] Check your current credits balance. Credits are used for persona interviews and campaign execution.",
     inputSchema: GetCreditsBalanceSchema,
     annotations: {
       title: "Get Credits Balance",
@@ -393,10 +523,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "payments",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   {
     name: "sociologic_get_x402_discovery",
-    description: "Get x402 payment discovery information. Returns which endpoints accept crypto payments (USDC on Base), wallet address, pricing, and facilitator details.",
+    description: "[Payments] Get x402 payment discovery information. Returns which endpoints accept crypto payments (USDC on Base), wallet address, pricing, and facilitator details.",
     inputSchema: GetX402DiscoverySchema,
     annotations: {
       title: "Get x402 Payment Info",
@@ -405,13 +544,22 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "payments",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "free" as const },
+      },
+    },
   },
   // ============================================
   // WEB RESEARCH TOOLS (Firecrawl via x402)
   // ============================================
   {
     name: "sociologic_search_web",
-    description: "Search the web and return scraped results. Useful for gathering information about topics, competitors, or market research to inform persona interviews.",
+    description: "[Search & Scraping] Search the web and return scraped results. Returns markdown content from matching pages.",
     inputSchema: SearchWebSchema,
     annotations: {
       title: "Search Web",
@@ -420,10 +568,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "search_scraping",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.02, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_research_topic",
-    description: "Research a topic and gather sources for persona enrichment. Returns summarized content from multiple web sources about a specific topic, ideal for building context before persona interviews.",
+    description: "[Search & Scraping] Search a topic and aggregate content from multiple web sources. Returns summarized results useful for building research context.",
     inputSchema: ResearchTopicSchema,
     annotations: {
       title: "Research Topic",
@@ -432,13 +589,22 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: true,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "search_scraping",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.02, unit: "usdc" as const, variable: true },
+      },
+    },
   },
   // ============================================
   // RNG TOOLS (Cryptographic randomness)
   // ============================================
   {
     name: "sociologic_rng_uuid",
-    description: "Generate a cryptographically random UUID v4. Useful for creating unique identifiers for experiments, sessions, or tracking.",
+    description: "[Utilities] Generate a cryptographically random UUID v4. Useful for creating unique identifiers for experiments, sessions, or tracking.",
     inputSchema: RngUuidSchema,
     annotations: {
       title: "Generate UUID",
@@ -447,10 +613,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_random",
-    description: "Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness. Returns a float. Use sociologic_rng_int for integers in a specific range.",
+    description: "[Utilities] Generate a cryptographically random floating-point number between 0 and 1. Uses hardware entropy for true randomness. Returns a float. Use sociologic_rng_int for integers in a specific range.",
     inputSchema: RngRandomSchema,
     annotations: {
       title: "Random Number (0-1)",
@@ -459,10 +634,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_int",
-    description: "Generate a cryptographically random integer within a range. Default range is 0-100. Uses hardware entropy for true randomness.",
+    description: "[Utilities] Generate a cryptographically random integer within a range. Default range is 0-100. Uses hardware entropy for true randomness.",
     inputSchema: RngIntSchema,
     annotations: {
       title: "Random Integer",
@@ -471,10 +655,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_dice",
-    description: "Roll a cryptographically random die with a configurable number of sides. Default is a 6-sided die. Uses hardware entropy for true randomness.",
+    description: "[Utilities] Roll a cryptographically random die with a configurable number of sides. Default is a 6-sided die. Uses hardware entropy for true randomness.",
     inputSchema: RngDiceSchema,
     annotations: {
       title: "Roll Dice",
@@ -483,10 +676,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_coin",
-    description: "Flip a cryptographically random coin. Returns heads or tails. Uses hardware entropy for true randomness.",
+    description: "[Utilities] Flip a cryptographically random coin. Returns heads or tails. Uses hardware entropy for true randomness.",
     inputSchema: RngCoinSchema,
     annotations: {
       title: "Flip Coin",
@@ -495,10 +697,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_shuffle",
-    description: "Randomly shuffle an array of items using the Fisher-Yates algorithm with cryptographic randomness. Useful for randomizing survey question order, A/B test assignments, or persona selection.",
+    description: "[Utilities] Randomly shuffle an array of items using the Fisher-Yates algorithm with cryptographic randomness. Useful for randomizing survey question order, A/B test assignments, or persona selection.",
     inputSchema: RngShuffleSchema,
     annotations: {
       title: "Shuffle Items",
@@ -507,10 +718,19 @@ export const TOOL_DEFINITIONS = [
       idempotentHint: false,
       openWorldHint: true,
     },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
+    },
   },
   {
     name: "sociologic_rng_weighted",
-    description: "Select a random item from an array using weighted probabilities with cryptographic randomness. Useful for simulating demographic distributions, market share splits, or probability-based scenarios.",
+    description: "[Utilities] Select a random item from an array using weighted probabilities with cryptographic randomness. Useful for simulating demographic distributions, market share splits, or probability-based scenarios.",
     inputSchema: RngWeightedSchema,
     annotations: {
       title: "Weighted Random Selection",
@@ -518,6 +738,15 @@ export const TOOL_DEFINITIONS = [
       destructiveHint: false,
       idempotentHint: false,
       openWorldHint: true,
+    },
+    _meta: {
+      sociologic: {
+        schemaVersion: 1,
+        category: "utilities",
+        provider: "sociologic",
+        trustTier: "verified",
+        cost: { type: "x402" as const, min: 0.001, unit: "usdc" as const },
+      },
     },
   },
 ] as const;

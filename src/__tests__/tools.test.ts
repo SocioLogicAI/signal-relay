@@ -100,6 +100,57 @@ describe('Tool Definitions', () => {
       expect(tool?.annotations.readOnlyHint).toBe(false);
     });
   });
+
+  it('should have _meta.sociologic on each tool', () => {
+    TOOL_DEFINITIONS.forEach((tool) => {
+      const meta = (tool as any)._meta?.sociologic;
+      expect(meta).toBeDefined();
+      expect(meta.schemaVersion).toBe(1);
+      expect(meta.category).toBeDefined();
+      expect(typeof meta.category).toBe('string');
+      expect(meta.provider).toBe('sociologic');
+      expect(meta.trustTier).toBe('verified');
+      expect(meta.cost).toBeDefined();
+      expect(['free', 'credits', 'x402']).toContain(meta.cost.type);
+    });
+  });
+
+  it('should have bracketed category prefix in each description', () => {
+    TOOL_DEFINITIONS.forEach((tool) => {
+      expect(tool.description).toMatch(/^\[/);
+    });
+  });
+
+  it('should use correct category prefixes', () => {
+    const categoryPrefixes: Record<string, string> = {
+      'sociologic_list_personas': '[Research/Personas]',
+      'sociologic_create_campaign': '[Research/Campaigns]',
+      'sociologic_create_focus_group': '[Research/Focus Groups]',
+      'sociologic_search_web': '[Search & Scraping]',
+      'sociologic_research_topic': '[Search & Scraping]',
+      'sociologic_rng_uuid': '[Utilities]',
+      'sociologic_get_credits_balance': '[Payments]',
+      'sociologic_get_x402_discovery': '[Payments]',
+    };
+
+    Object.entries(categoryPrefixes).forEach(([name, prefix]) => {
+      const tool = TOOL_DEFINITIONS.find((t) => t.name === name);
+      expect(tool?.description.startsWith(prefix)).toBe(true);
+    });
+  });
+
+  it('should have valid cost types', () => {
+    TOOL_DEFINITIONS.forEach((tool) => {
+      const cost = (tool as any)._meta?.sociologic?.cost;
+      if (cost.type === 'free') {
+        expect(cost.unit).toBeUndefined();
+      } else if (cost.type === 'credits') {
+        expect(cost.unit).toBe('credits');
+      } else if (cost.type === 'x402') {
+        expect(cost.unit).toBe('usdc');
+      }
+    });
+  });
 });
 
 describe('ListPersonasSchema', () => {

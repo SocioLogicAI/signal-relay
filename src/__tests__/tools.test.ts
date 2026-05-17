@@ -2,7 +2,7 @@
  * Tests for MCP Tool Definitions and Zod Schemas
  *
  * Tests cover:
- * - All 26 tool schemas validate correctly
+ * - All 24 tool schemas validate correctly
  * - Required vs optional fields
  * - Type coercion and defaults
  * - Error messages for invalid input
@@ -27,15 +27,13 @@ import {
   GetCreditsBalanceSchema,
   GetX402DiscoverySchema,
   // Web research schemas
-  ScrapeUrlSchema,
   SearchWebSchema,
   ResearchTopicSchema,
-  GetCompanyInfoSchema,
 } from '../tools';
 
 describe('Tool Definitions', () => {
-  it('should have 26 tool definitions', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(26);
+  it('should have 24 tool definitions', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(24);
   });
 
   it('should have unique tool names', () => {
@@ -78,10 +76,8 @@ describe('Tool Definitions', () => {
       'sociologic_get_credits_balance',
       'sociologic_get_x402_discovery',
       // Web research tools (all read-only)
-      'sociologic_scrape_url',
       'sociologic_search_web',
       'sociologic_research_topic',
-      'sociologic_get_company_info',
     ];
 
     readOnlyTools.forEach((name) => {
@@ -622,53 +618,8 @@ describe('GetCreditsBalanceSchema', () => {
 });
 
 // ============================================
-// WEB RESEARCH SCHEMAS (Firecrawl integration)
+// WEB RESEARCH SCHEMAS (Firecrawl via x402)
 // ============================================
-
-describe('ScrapeUrlSchema', () => {
-  it('should accept valid URL', () => {
-    const result = ScrapeUrlSchema.safeParse({
-      url: 'https://example.com',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should apply defaults', () => {
-    const result = ScrapeUrlSchema.safeParse({
-      url: 'https://example.com',
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.formats).toEqual(['markdown']);
-      expect(result.data.only_main_content).toBe(true);
-    }
-  });
-
-  it('should accept multiple formats', () => {
-    const result = ScrapeUrlSchema.safeParse({
-      url: 'https://example.com',
-      formats: ['markdown', 'html', 'links'],
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject invalid URL', () => {
-    const result = ScrapeUrlSchema.safeParse({
-      url: 'not-a-url',
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject missing URL', () => {
-    const result = ScrapeUrlSchema.safeParse({});
-
-    expect(result.success).toBe(false);
-  });
-});
 
 describe('SearchWebSchema', () => {
   it('should accept valid query', () => {
@@ -781,30 +732,6 @@ describe('ResearchTopicSchema', () => {
       topic: 'test',
       source_count: 6,
     });
-
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('GetCompanyInfoSchema', () => {
-  it('should accept valid URL', () => {
-    const result = GetCompanyInfoSchema.safeParse({
-      url: 'https://example.com',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject invalid URL', () => {
-    const result = GetCompanyInfoSchema.safeParse({
-      url: 'not-a-url',
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject missing URL', () => {
-    const result = GetCompanyInfoSchema.safeParse({});
 
     expect(result.success).toBe(false);
   });

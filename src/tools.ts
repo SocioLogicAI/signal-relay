@@ -162,19 +162,10 @@ export const GetX402DiscoverySchema = z.object({});
 
 // ============================================
 // WEB RESEARCH SCHEMAS (Firecrawl via x402)
+// Only search and research_topic remain;
+// scrape_url and get_company_info were removed
+// because Firecrawl only supports x402 on /v1/x402/search
 // ============================================
-
-/**
- * Schema for scraping a URL
- */
-export const ScrapeUrlSchema = z.object({
-  url: z.string().url()
-    .describe("The URL to scrape"),
-  formats: z.array(z.enum(["markdown", "html", "links"])).default(["markdown"])
-    .describe("Output formats to return"),
-  only_main_content: z.boolean().default(true)
-    .describe("Whether to extract only the main content (recommended)"),
-});
 
 /**
  * Schema for searching the web
@@ -194,14 +185,6 @@ export const ResearchTopicSchema = z.object({
     .describe("Topic to research for persona enrichment"),
   source_count: z.number().int().min(1).max(5).default(3)
     .describe("Number of sources to gather"),
-});
-
-/**
- * Schema for getting company info
- */
-export const GetCompanyInfoSchema = z.object({
-  url: z.string().url()
-    .describe("Company website URL to analyze"),
 });
 
 // ============================================
@@ -424,20 +407,8 @@ export const TOOL_DEFINITIONS = [
     },
   },
   // ============================================
-  // WEB RESEARCH TOOLS (Firecrawl integration)
+  // WEB RESEARCH TOOLS (Firecrawl via x402)
   // ============================================
-  {
-    name: "sociologic_scrape_url",
-    description: "Scrape content from a URL. Returns markdown, HTML, or links from a webpage. Useful for researching companies, products, or topics to enrich persona interviews. Costs vary based on page complexity.",
-    inputSchema: ScrapeUrlSchema,
-    annotations: {
-      title: "Scrape URL",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-  },
   {
     name: "sociologic_search_web",
     description: "Search the web and return scraped results. Useful for gathering information about topics, competitors, or market research to inform persona interviews.",
@@ -456,18 +427,6 @@ export const TOOL_DEFINITIONS = [
     inputSchema: ResearchTopicSchema,
     annotations: {
       title: "Research Topic",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-  },
-  {
-    name: "sociologic_get_company_info",
-    description: "Get information about a company from their website. Returns company name, description, and main content. Useful for preparing brand affinity questions in persona interviews.",
-    inputSchema: GetCompanyInfoSchema,
-    annotations: {
-      title: "Get Company Info",
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,

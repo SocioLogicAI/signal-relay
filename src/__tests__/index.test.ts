@@ -126,7 +126,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(body.serverInfo).toBeDefined();
       expect(body.serverInfo.name).toBe('signal-relay-mcp');
       expect(body.tools).toBeDefined();
-      expect(body.tools).toHaveLength(26);
+      expect(body.tools).toHaveLength(24);
       expect(body.authentication).toBeDefined();
       expect(body.authentication.required).toBe(true);
     });
@@ -511,7 +511,7 @@ describe('Cloudflare Workers Handler', () => {
       expect(response.status).toBe(200);
 
       const body = await response.json();
-      expect(body.result.tools).toHaveLength(26);
+      expect(body.result.tools).toHaveLength(24);
     });
 
     it('should include JSON schema for each tool', async () => {

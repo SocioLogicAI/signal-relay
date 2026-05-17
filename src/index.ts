@@ -30,10 +30,8 @@ import {
   CreatePersonaWithPaymentSchema,
   GetX402DiscoverySchema,
   // Web research schemas (Firecrawl integration)
-  ScrapeUrlSchema,
   SearchWebSchema,
   ResearchTopicSchema,
-  GetCompanyInfoSchema,
   // RNG schemas
   RngUuidSchema,
   RngRandomSchema,
@@ -427,15 +425,6 @@ class MCPHandler {
       }
 
       // Web Research Tools (Firecrawl integration)
-      case "sociologic_scrape_url": {
-        const parsed = safeParseArgs(ScrapeUrlSchema, args);
-        return this.client.scrapeUrl({
-          url: parsed.url,
-          formats: parsed.formats,
-          only_main_content: parsed.only_main_content,
-        });
-      }
-
       case "sociologic_search_web": {
         const parsed = safeParseArgs(SearchWebSchema, args);
         return this.client.searchWeb({
@@ -449,13 +438,6 @@ class MCPHandler {
         return this.client.researchTopic({
           topic: parsed.topic,
           source_count: parsed.source_count,
-        });
-      }
-
-      case "sociologic_get_company_info": {
-        const parsed = safeParseArgs(GetCompanyInfoSchema, args);
-        return this.client.getCompanyInfo({
-          url: parsed.url,
         });
       }
 

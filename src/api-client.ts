@@ -436,30 +436,6 @@ export class SocioLogicClient {
   // ============================================
 
   /**
-   * Scrape content from a URL
-   */
-  async scrapeUrl(params: {
-    url: string;
-    formats?: string[];
-    only_main_content?: boolean;
-  }) {
-    return this.request<{
-      success: boolean;
-      data?: {
-        markdown?: string;
-        html?: string;
-        links?: string[];
-        metadata?: {
-          title?: string;
-          description?: string;
-          sourceURL?: string;
-        };
-      };
-      cost_usdc?: number;
-    }>("POST", "/api/v1/research/scrape", params, undefined, 60000); // 60s timeout for scraping
-  }
-
-  /**
    * Search the web
    */
   async searchWeb(params: {
@@ -497,24 +473,6 @@ export class SocioLogicClient {
       }>;
       cost_usdc?: number;
     }>("POST", "/api/v1/research/topic", params, undefined, 90000); // 90s for multi-source
-  }
-
-  /**
-   * Get company information from their website
-   */
-  async getCompanyInfo(params: {
-    url: string;
-  }) {
-    return this.request<{
-      success: boolean;
-      data?: {
-        url: string;
-        title?: string;
-        description?: string;
-        content?: string;
-      };
-      cost_usdc?: number;
-    }>("POST", "/api/v1/research/company", params, undefined, 60000);
   }
 
   // ============================================

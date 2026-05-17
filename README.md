@@ -7,7 +7,7 @@ A remote MCP (Model Context Protocol) server that connects AI agents to [SocioLo
 
 ## Features
 
-- **20 MCP Tools** - Full access to personas, campaigns, focus groups, credits, and web research
+- **24 MCP Tools** - Personas, campaigns, focus groups, web research, RNG, credits, and payments
 - **High-Fidelity Personas** - Synthetic personas with consistent demographics, psychographics, and behavior
 - **Semantic Memory** - RAG-powered memory retrieval for persona continuity across conversations
 - **Edge Deployed** - Runs on Cloudflare Workers (300+ locations, <50ms latency)
@@ -98,7 +98,6 @@ Starts a local server at `http://localhost:8787`.
 | `sociologic_list_personas` | List synthetic personas from marketplace or private collection |
 | `sociologic_get_persona` | Get detailed persona information (demographics, psychographics, traits) |
 | `sociologic_create_persona` | Generate a new persona from natural language description |
-| `sociologic_interview_persona` | Conduct adversarial interview with a persona |
 | `sociologic_get_persona_memories` | Retrieve persona's semantic memories via vector search |
 | `sociologic_list_campaigns` | List research campaigns with status and results |
 | `sociologic_get_campaign` | Get campaign details including interviews and findings |
@@ -110,10 +109,8 @@ Starts a local server at `http://localhost:8787`.
 | `sociologic_create_focus_group` | Create new focus group to organize personas |
 | `sociologic_add_personas_to_focus_group` | Add personas to an existing focus group |
 | `sociologic_get_credits_balance` | Check current credits balance and usage |
-| `sociologic_scrape_url` | Scrape content from a URL (web research) |
 | `sociologic_search_web` | Search the web and scrape results |
 | `sociologic_research_topic` | Research a topic with multiple sources |
-| `sociologic_get_company_info` | Get company information from a website |
 
 ## API Endpoints
 
@@ -124,26 +121,6 @@ Starts a local server at `http://localhost:8787`.
 | `/info` | GET | Server information and available tools |
 
 ## Example Usage
-
-### Interview a Persona
-
-```bash
-curl -X POST https://mcp.sociologic.ai/ \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: YOUR_API_KEY" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/call",
-    "params": {
-      "name": "sociologic_interview_persona",
-      "arguments": {
-        "slug": "enterprise-buyer",
-        "message": "What would make you hesitant to try a new AI product?"
-      }
-    }
-  }'
-```
 
 ### List Available Personas
 
